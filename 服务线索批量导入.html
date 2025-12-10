@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>服务线索批量导入 - 居家长护业务管理系统</title>
+  <!-- 引入外部资源 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <style>
+    /* 继承全局样式 */
+    body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+    .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+    .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+    .btn-outline-secondary { border-color: #ddd; color: #666; }
+    .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; }
+    .card-body { padding: 20px; }
+    /* 布局样式 */
+    .app-container { display: flex; min-height: 100vh; }
+    /* 侧边导航 */
+    .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+    .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+    .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+    .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+    .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+    /* 主内容区 */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+    /* 顶部导航 */
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+    .user-info { display: flex; align-items: center; }
+    .notification { position: relative; margin-right: 20px; cursor: pointer; }
+    .notification i { font-size: 20px; color: #666; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+    .user-name { font-size: 14px; font-weight: 500; }
+    /* 服务线索导入专属样式 */
+    .action-buttons { display: flex; align-items: center; gap: 10px; } /* 顶部按钮组间距 */
+    .upload-area { border: 2px dashed #dee2e6; border-radius: 8px; padding: 30px; text-align: center; transition: all 0.3s ease; cursor: pointer; }
+    .upload-area:hover { border-color: #1890FF; background-color: rgba(24, 144, 255, 0.05); }
+    .upload-area i { font-size: 48px; color: #1890FF; margin-bottom: 15px; }
+    .upload-area p { margin: 0; color: #666; }
+    .result-summary { margin-bottom: 15px; display: flex; gap: 20px; align-items: center; }
+    .result-summary .text-success, .result-summary .text-danger { font-weight: 500; font-size: 15px; }
+    .fail-list th { font-size: 13px; color: #999; }
+    .fail-list td { font-size: 13px; }
+    .allocation-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; }
+    .allocation-col { flex: 1; min-width: 200px; }
+    /* 手动导入样式 */
+    .manual-import-tabs .nav-link { border: 1px solid transparent; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; color: #666; }
+    .manual-import-tabs .nav-link.active { color: #1890FF; background-color: #fff; border-color: #dee2e6 #dee2e6 #fff; border-top: 3px solid #1890FF; font-weight: 500; }
+    .manual-import-form { margin-top: 20px; }
+    .manual-import-form table th { background-color: #f8f9fa; text-align: center; vertical-align: middle; font-size: 13px; }
+    .manual-import-form table td { vertical-align: middle; }
+    .manual-import-form input, .manual-import-form select { width: 100%; padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+    .manual-import-form input:focus, .manual-import-form select:focus { outline: none; border-color: #1890FF; }
+    .manual-import-form .required-field { border-left: 3px solid #FF4D4F; }
+    .manual-import-form .red-field { border-left: 3px solid #FF4D4F; background-color: #fff5f5; }
+    .field-label { font-weight: 500; margin-bottom: 5px; }
+    .field-hint { font-size: 11px; color: #999; margin-top: 2px; }
+    /* 输入验证错误样式 */
+    .manual-import-form .is-invalid {
+      border-color: #dc3545;
+      background-color: #fff5f5;
+    }
+    .manual-import-form .is-invalid:focus {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    }
+    /* 清除错误状态的动画 */
+    .manual-import-form input:focus, .manual-import-form select:focus {
+      border-color: #1890FF;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边导航（新增评估管理分组） -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+          <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+          <h3>管理员工作平台</h3>
+      </div>
+      
+      <!-- 导航分组：系统配置 -->
+      <div class="nav-group-title">系统配置</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="机构信息配置.html" class="nav-link">
+                  <i class="fa fa-building-o"></i>
+                  <span>机构信息配置</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="套餐管理.html" class="nav-link">
+                  <i class="fa fa-cog"></i>
+                  <span>套餐管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="行政区划.html" class="nav-link">
+                  <i class="fa fa-book"></i>
+                  <span>行政区域管理</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：用户管理 -->
+      <div class="nav-group-title">用户管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="角色配置.html" class="nav-link">
+                  <i class="fa fa-user-secret"></i>
+                  <span>角色权限配置</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：日志管理 -->
+      <div class="nav-group-title">数据管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="服务线索批量导入.html" class="nav-link active">
+                  <i class="fa fa-upload"></i>
+                  <span>服务对象数据批量导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="服务对象数据维护.html" class="nav-link">
+                  <i class="fa fa-edit"></i>
+                  <span>服务对象数据维护</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保工单导入.html" class="nav-link">
+                  <i class="fa fa-file-excel-o"></i>
+                  <span>医保平台工单导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保平台新增服务对象数据.html" class="nav-link">
+                  <i class="fa fa-download"></i>
+                  <span>医保平台新增服务对象数据导出</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保对账数据管理.html" class="nav-link">
+                  <i class="fa fa-calculator"></i>
+                  <span>医保对账数据管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="关键数据配置.html" class="nav-link">
+                  <i class="fa fa-wrench"></i>
+                  <span>其他数据维护</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 顶部导航：标题 + 操作按钮 -->
+      <div class="top-nav">
+        <h1 class="page-title">服务线索批量导入</h1>
+        <div class="action-buttons">
+          <!-- 下载标准模板按钮 -->
+          <button id="downloadTemplateBtn" class="btn btn-primary">
+            <i class="fa fa-download"></i> 下载标准模板
+          </button>
+          <!-- 查看填写说明链接 -->
+          <a href="#" id="viewInstructionsLink" class="btn btn-link text-primary">
+            <i class="fa fa-book"></i> 查看填写说明
+          </a>
+        </div>
+      </div>
+
+      <!-- 导入方式切换标签 -->
+      <div class="card">
+        <div class="card-body">
+          <ul class="nav nav-tabs manual-import-tabs" id="importModeTab" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="file-import-tab" data-bs-toggle="tab" data-bs-target="#file-import" type="button" role="tab" aria-controls="file-import" aria-selected="true">
+                <i class="fa fa-file-excel-o"></i> 文件导入
+              </button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="manual-import-tab" data-bs-toggle="tab" data-bs-target="#manual-import" type="button" role="tab" aria-controls="manual-import" aria-selected="false">
+                <i class="fa fa-edit"></i> 手动导入
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- 标签页内容 -->
+      <div class="tab-content" id="importModeTabContent">
+        <!-- 文件导入标签页 -->
+        <div class="tab-pane fade show active" id="file-import" role="tabpanel" aria-labelledby="file-import-tab">
+
+      <!-- 1. 文件上传区域 -->
+      <div class="card" id="uploadCard">
+        <div class="card-body">
+          <h5 class="card-title mb-4">步骤1：上传线索文件</h5>
+          <!-- 自定义上传区域（支持点击/拖拽） -->
+          <div class="upload-area mb-4" id="uploadArea">
+            <i class="fa fa-cloud-upload"></i>
+            <p>点击或拖拽Excel文件到此处</p>
+            <p class="text-muted mt-1" id="selectedFileName"></p> <!-- 显示选中文件名 -->
+          </div>
+          <!-- 隐藏原生文件输入框 -->
+          <input type="file" id="fileInput" class="d-none" accept=".xlsx">
+          <!-- 文件格式提示 -->
+          <div class="form-text text-muted mb-3">支持.xlsx格式，最大10MB</div>
+          <!-- 开始导入按钮 -->
+          <button id="startImportBtn" class="btn btn-primary" disabled>
+            <i class="fa fa-upload"></i> 开始导入
+          </button>
+        </div>
+      </div>
+
+      <!-- 2. 导入结果区域（默认隐藏） -->
+      <div class="card" id="importResultCard" style="display: none;">
+        <div class="card-body">
+          <h5 class="card-title mb-4">步骤2：导入结果</h5>
+          <!-- 成功/失败数量统计 -->
+          <div class="result-summary">
+            <div class="text-success">
+              <i class="fa fa-check-circle"></i> 成功导入：<span id="successCount">0</span>条
+            </div>
+            <div class="text-danger">
+              <i class="fa fa-times-circle"></i> 导入失败：<span id="failCount">0</span>条
+            </div>
+          </div>
+          <!-- 失败列表（默认隐藏） -->
+          <div id="failListContainer" style="display: none;">
+            <h6 class="card-subtitle mb-2 text-muted">失败详情</h6>
+            <div class="table-responsive">
+              <table class="table table-striped table-sm fail-list">
+                <thead>
+                  <tr>
+                    <th>行号</th>
+                    <th>姓名</th>
+                    <th>身份证号</th>
+                    <th>错误原因</th>
+                  </tr>
+                </thead>
+                <tbody id="failList">
+                  <!-- 失败数据动态插入 -->
+                </tbody>
+              </table>
+            </div>
+            <!-- 下载错误报告按钮 -->
+            <button id="downloadErrorBtn" class="btn btn-outline-secondary btn-sm mt-2">
+              <i class="fa fa-download"></i> 下载错误报告
+            </button>
+          </div>
+          <!-- 重新导入按钮 -->
+          <button id="reImportBtn" class="btn btn-outline-secondary mt-3">
+            <i class="fa fa-refresh"></i> 重新导入
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. 线索分配区域（默认隐藏） -->
+      <div class="card" id="allocationCard" style="display: none;">
+        <div class="card-body">
+          <h5 class="card-title mb-4">步骤3：批量分配线索</h5>
+          <div class="allocation-row">
+            <!-- 分配方式下拉框 -->
+            <div class="allocation-col">
+              <label for="allocationMethod" class="form-label">分配方式</label>
+              <select class="form-select" id="allocationMethod">
+                <option value="community">按社区/村镇分配</option>
+                <option value="assessor">按评估员分配</option>
+              </select>
+            </div>
+            <!-- 社区/村镇选择框（按社区分配时显示） -->
+            <div class="allocation-col" id="communitySelectWrapper">
+              <label for="community" class="form-label">社区/村镇</label>
+              <select class="form-select" id="community">
+                <option value="">请选择</option>
+                <option value="1">社区A</option>
+                <option value="2">社区B</option>
+                <option value="3">村镇C</option>
+                <option value="4">村镇D</option>
+              </select>
+            </div>
+            <!-- 评估员选择框 -->
+            <div class="allocation-col">
+              <label for="assessor" class="form-label">评估员</label>
+              <select class="form-select" id="assessor">
+                <option value="">请选择</option>
+                <option value="1">张三（ID:001）</option>
+                <option value="2">李四（ID:002）</option>
+                <option value="3">王五（ID:003）</option>
+              </select>
+            </div>
+          </div>
+          <!-- 批量分配按钮 -->
+          <button id="batchAllocateBtn" class="btn btn-primary mt-4">
+            <i class="fa fa-user-plus"></i> 批量分配
+          </button>
+        </div>
+      </div>
+        </div>
+
+        <!-- 手动导入标签页 -->
+        <div class="tab-pane fade" id="manual-import" role="tabpanel" aria-labelledby="manual-import-tab">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title mb-4">手动录入服务对象信息</h5>
+              <div class="alert alert-info">
+                <i class="fa fa-info-circle"></i> <strong>说明：</strong>红色标记字段为外勤评估时必须填写的内容，蓝色字段由医保系统自动更新，无需手动录入。
+              </div>
+              
+              <div class="action-bar mb-3">
+                <div>
+                  <button class="btn btn-link" id="showManualImportRules">
+                    <i class="fa fa-book"></i> 查看填写规范
+                  </button>
+                </div>
+                <div>
+                  <button class="btn btn-outline-secondary" id="addManualImportRow">
+                    <i class="fa fa-plus"></i> 添加一行
+                  </button>
+                </div>
+              </div>
+
+              <div class="manual-import-form">
+                <div class="table-responsive">
+                  <table class="table table-bordered" id="manualImportTable">
+                    <thead>
+                      <tr>
+                        <th style="width: 50px;">序号</th>
+                        <th style="width: 120px;">姓名 <span class="text-danger">*</span></th>
+                        <th style="width: 100px;">性别</th>
+                        <th style="width: 150px;">身份证号 <span class="text-danger">*</span></th>
+                        <th style="width: 120px;">手机号 <span class="text-danger">*</span></th>
+                        <th style="width: 120px;">居住地小区/自然村 <span class="text-danger">*</span></th>
+                        <th style="width: 200px;">具体住址 <span class="text-danger">*</span></th>
+                        <th style="width: 120px;">代理人姓名</th>
+                        <th style="width: 120px;">代理人手机号</th>
+                        <th style="width: 150px;">代理人身份证号</th>
+                        <th style="width: 100px;">代理人关系</th>
+                        <th style="width: 120px;">失能等级 <i class="fa fa-info-circle text-primary" data-bs-toggle="tooltip" title="数据字典1.4"></i></th>
+                        <th style="width: 100px;">医保类型 <i class="fa fa-info-circle text-primary" data-bs-toggle="tooltip" title="数据字典1.3"></i></th>
+                        <th style="width: 100px;">残疾等级 <i class="fa fa-info-circle text-primary" data-bs-toggle="tooltip" title="数据字典1.2"></i></th>
+                        <th style="width: 80px;">是否低保户</th>
+                        <th style="width: 100px;">失能原因 <i class="fa fa-info-circle text-primary" data-bs-toggle="tooltip" title="数据字典1.5"></i></th>
+                        <th style="width: 120px;">是否本省异地参保</th>
+                        <th style="width: 150px;" class="bg-danger text-white">外勤上门评估日期 <span class="text-white">*</span></th>
+                        <th style="width: 100px;">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="manualImportTableBody">
+                      <!-- 手动输入行将动态插入这里 -->
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="action-buttons mt-3">
+                  <button id="startManualImport" class="btn btn-primary">
+                    <i class="fa fa-upload"></i> 开始导入
+                  </button>
+                  <button id="clearManualImport" class="btn btn-outline-secondary">
+                    <i class="fa fa-trash"></i> 清空所有
+                  </button>
+                </div>
+              </div>
+
+              <div class="results-area mt-4" id="manualImportResultsArea" style="display: none;">
+                <div class="result-summary">
+                  <div class="text-success">
+                    <i class="fa fa-check-circle"></i> 成功导入：<span id="manualImportSuccessCount">0</span>条
+                  </div>
+                  <div class="text-danger">
+                    <i class="fa fa-times-circle"></i> 导入失败：<span id="manualImportErrorCount">0</span>条
+                  </div>
+                </div>
+                
+                <div class="table-responsive mt-3" id="manualImportErrorContainer" style="display: none;">
+                  <h6 class="card-subtitle mb-2 text-muted">失败详情</h6>
+                  <table class="table table-striped table-sm fail-list">
+                    <thead>
+                      <tr>
+                        <th>序号</th>
+                        <th>姓名</th>
+                        <th>身份证号</th>
+                        <th>错误原因</th>
+                      </tr>
+                    </thead>
+                    <tbody id="manualImportErrorTableBody">
+                      <!-- 错误数据将动态插入这里 -->
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="action-buttons mt-3">
+                  <button class="btn btn-secondary" id="retryManualImport">
+                    <i class="fa fa-refresh"></i> 重新导入
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框1：填写说明 -->
+  <div class="modal fade" id="instructionsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">模板填写说明</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-warning">
+            <strong>重要提示：</strong>红色标记字段为外勤评估时必须填写的内容，蓝色字段由医保系统自动更新，无需手动录入。
+          </div>
+          
+          <div class="row">
+            <!-- 必填字段 -->
+            <div class="col-md-6">
+              <h6 class="mb-3 text-danger">必填字段（红色标记）</h6>
+              <table class="table table-bordered table-sm">
+                <thead>
+                  <tr>
+                    <th>字段名</th>
+                    <th>格式要求</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>姓名</strong></td>
+                    <td>1-30个字符，不可为空</td>
+                  </tr>
+                  <tr>
+                    <td><strong>手机号</strong></td>
+                    <td>11位有效手机号，格式：1[3-9]XXXXXXXXX</td>
+                  </tr>
+                  <tr>
+                    <td><strong>居住地小区/自然村</strong></td>
+                    <td>从系统行政区划中选择，不可手动输入</td>
+                  </tr>
+                  <tr>
+                    <td><strong>具体住址</strong></td>
+                    <td>1-128个字符，详细居住地址</td>
+                  </tr>
+                  <tr class="table-danger">
+                    <td><strong>外勤上门评估日期</strong></td>
+                    <td>格式：YYYY-MM-DD（如：2024-05-20）</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!-- 选填字段 + 注意事项 -->
+            <div class="col-md-6">
+              <h6 class="mb-3 text-primary">选填字段</h6>
+              <table class="table table-bordered table-sm">
+                <thead>
+                  <tr>
+                    <th>字段名</th>
+                    <th>可选值/格式</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>性别</td>
+                    <td>男 / 女</td>
+                  </tr>
+                  <tr>
+                    <td>身份证号</td>
+                    <td>15位或18位，填写后自动计算出生日期</td>
+                  </tr>
+                  <tr>
+                    <td>失能等级</td>
+                    <td>见数据字典1.4（轻度/中度/重度）</td>
+                  </tr>
+                  <tr>
+                    <td>医保类型</td>
+                    <td>见数据字典1.3（职工/城乡居民）</td>
+                  </tr>
+                  <tr>
+                    <td>残疾等级</td>
+                    <td>见数据字典1.2（肢体残疾一/二/三级）</td>
+                  </tr>
+                  <tr>
+                    <td>失能原因</td>
+                    <td>见数据字典1.5（年老/疾病/意外/其他）</td>
+                  </tr>
+                  <tr>
+                    <td>是否低保户</td>
+                    <td>是 / 否</td>
+                  </tr>
+                  <tr>
+                    <td>是否本省异地参保</td>
+                    <td>是 / 否</td>
+                  </tr>
+                  <tr>
+                    <td>代理人信息</td>
+                    <td>姓名、手机号、身份证号、关系</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <h6 class="mb-3 mt-4 text-primary">数据字典参考</h6>
+          <div class="row">
+            <div class="col-md-3">
+              <div class="card mb-2">
+                <div class="card-header bg-light p-2">
+                  <small><strong>1.2 残疾等级</strong></small>
+                </div>
+                <div class="card-body p-2">
+                  <small>
+                    <ul class="mb-0" style="font-size: 11px;">
+                      <li>1-肢体残疾一级</li>
+                      <li>2-肢体残疾二级</li>
+                      <li>3-肢体残疾三级</li>
+                    </ul>
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card mb-2">
+                <div class="card-header bg-light p-2">
+                  <small><strong>1.3 保险类型</strong></small>
+                </div>
+                <div class="card-body p-2">
+                  <small>
+                    <ul class="mb-0" style="font-size: 11px;">
+                      <li>1-职工基本医疗保险</li>
+                      <li>2-城乡居民基本医疗保险</li>
+                    </ul>
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card mb-2">
+                <div class="card-header bg-light p-2">
+                  <small><strong>1.4 失能等级</strong></small>
+                </div>
+                <div class="card-body p-2">
+                  <small>
+                    <ul class="mb-0" style="font-size: 11px;">
+                      <li>轻度失能</li>
+                      <li>中度失能</li>
+                      <li>重度失能（一/二/三级）</li>
+                    </ul>
+                  </small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="card mb-2">
+                <div class="card-header bg-light p-2">
+                  <small><strong>1.5 失能原因</strong></small>
+                </div>
+                <div class="card-body p-2">
+                  <small>
+                    <ul class="mb-0" style="font-size: 11px;">
+                      <li>1-年老</li>
+                      <li>2-疾病</li>
+                      <li>3-意外</li>
+                      <li>4-其他</li>
+                    </ul>
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <h6 class="mb-3 mt-4 text-primary">注意事项</h6>
+          <ul class="list-group list-group-flush">
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>重复校验：</strong>按「姓名+身份证号」判断是否重复，重复数据将导入失败
+            </li>
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>模板列名：</strong>不可修改Excel模板的列名，否则导入失败
+            </li>
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>格式验证：</strong>日期格式必须为YYYY-MM-DD，手机号必须为11位有效号码
+            </li>
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>下拉选择：</strong>失能等级、医保类型、残疾等级、失能原因等字段必须从数据字典中选择，不可随意填写
+            </li>
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>身份证号：</strong>填写15位或18位身份证号后，系统会自动计算出生日期和年龄
+            </li>
+            <li class="list-group-item">
+              <i class="fa fa-exclamation-circle text-warning"></i>
+              <strong>外勤评估：</strong>外勤上门评估日期为外勤评估时的必填项（红色标记字段）
+            </li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">我知道了</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框2：导入中 -->
+  <div class="modal fade" id="importingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p class="mt-3">导入中，请稍候...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框3：分配成功 -->
+  <div class="modal fade" id="allocateSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="fa fa-check-circle text-success" style="font-size: 48px; margin-bottom: 15px;"></i>
+          <h5 class="modal-title">分配成功</h5>
+          <p class="text-muted" id="allocateSuccessMsg">已成功分配5条线索给张三</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 页面加载完成后初始化
+    $(function() {
+      // 初始化Tooltip
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+      
+      // 初始化模态框
+      const instructionsModal = new bootstrap.Modal('#instructionsModal');
+      const importingModal = new bootstrap.Modal('#importingModal');
+      const allocateSuccessModal = new bootstrap.Modal('#allocateSuccessModal');
+
+      // 全局变量
+      let manualImportRowCount = 0;
+
+      // 1. 查看填写说明
+      $('#viewInstructionsLink').click(function(e) {
+        e.preventDefault();
+        instructionsModal.show();
+      });
+
+      // 2. 下载标准模板
+      $('#downloadTemplateBtn').click(function() {
+        // 模拟下载（实际项目中替换为后端模板URL）
+        alert('正在下载标准模板，请稍后...');
+        // window.location.href = '/api/download/service-lead-template';
+      });
+
+      // 3. 文件上传处理（点击/拖拽）
+      const uploadArea = $('#uploadArea');
+      const fileInput = $('#fileInput');
+      const selectedFileName = $('#selectedFileName');
+      const startImportBtn = $('#startImportBtn');
+
+      // 点击上传区域触发文件选择
+      uploadArea.click(() => fileInput.click());
+
+      // 拖拽上传事件
+      uploadArea.on('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.addClass('border-primary bg-primary/5');
+      });
+      uploadArea.on('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.removeClass('border-primary bg-primary/5');
+      });
+      uploadArea.on('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        uploadArea.removeClass('border-primary bg-primary/5');
+        if (e.originalEvent.dataTransfer.files.length) {
+          fileInput[0].files = e.originalEvent.dataTransfer.files;
+          handleFileSelection();
+        }
+      });
+
+      // 文件选择后验证并更新UI
+      fileInput.change(handleFileSelection);
+      function handleFileSelection() {
+        const file = fileInput[0].files[0];
+        if (!file) return;
+
+        // 验证文件格式
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (ext !== 'xlsx') {
+          alert('请上传.xlsx格式的Excel文件！');
+          fileInput.val('');
+          selectedFileName.text('');
+          startImportBtn.prop('disabled', true);
+          return;
+        }
+
+        // 验证文件大小（10MB）
+        if (file.size > 10 * 1024 * 1024) {
+          alert('文件大小不能超过10MB！');
+          fileInput.val('');
+          selectedFileName.text('');
+          startImportBtn.prop('disabled', true);
+          return;
+        }
+
+        // 显示文件名并启用导入按钮
+        selectedFileName.text(`已选择：${file.name}`);
+        startImportBtn.prop('disabled', false);
+      }
+
+      // 4. 开始导入
+      startImportBtn.click(function() {
+        const file = fileInput[0].files[0];
+        if (!file) {
+          alert('请先选择文件！');
+          return;
+        }
+
+        // 显示导入中模态框
+        importingModal.show();
+
+        // 模拟导入过程（2秒后返回结果）
+        setTimeout(() => {
+          importingModal.hide();
+
+          // 模拟后端返回的导入结果（实际项目中从接口获取）
+          const mockResult = {
+            successCount: 8,
+            failCount: 2,
+            failItems: [
+              { row: 3, name: '张三', idCard: '1234567890123456', reason: '身份证号格式错误（仅16位）' },
+              { row: 7, name: '李四', idCard: '987654321012345678', reason: '联系电话格式错误（非11位）' }
+            ]
+          };
+
+          // 更新导入结果UI
+          $('#importResultCard').show();
+          $('#successCount').text(mockResult.successCount);
+          $('#failCount').text(mockResult.failCount);
+
+          // 处理失败列表
+          if (mockResult.failCount > 0) {
+            $('#failListContainer').show();
+            const failList = $('#failList');
+            failList.empty();
+            mockResult.failItems.forEach(item => {
+              failList.append(`
+                <tr>
+                  <td>${item.row}</td>
+                  <td>${item.name}</td>
+                  <td>${item.idCard}</td>
+                  <td class="text-danger">${item.reason}</td>
+                </tr>
+              `);
+            });
+          } else {
+            $('#failListContainer').hide();
+          }
+
+          // 有成功导入的线索时，显示分配区域
+          if (mockResult.successCount > 0) {
+            $('#allocationCard').show();
+          }
+
+          // 禁用导入按钮（防止重复导入）
+          startImportBtn.prop('disabled', true);
+        }, 2000);
+      });
+
+      // 5. 重新导入（重置状态）
+      $('#reImportBtn').click(function() {
+        fileInput.val('');
+        selectedFileName.text('');
+        startImportBtn.prop('disabled', true);
+        $('#importResultCard').hide();
+        $('#allocationCard').hide();
+      });
+
+      // 6. 下载错误报告
+      $('#downloadErrorBtn').click(function() {
+        // 模拟下载错误报告（实际项目中替换为后端接口）
+        alert('正在下载错误报告，请稍后...');
+        // window.location.href = '/api/download/import-error-report';
+      });
+
+      // 7. 分配方式切换（显示/隐藏社区选择框）
+      $('#allocationMethod').change(function() {
+        const method = $(this).val();
+        if (method === 'community') {
+          $('#communitySelectWrapper').show(); // 按社区分配：显示社区选择
+        } else if (method === 'assessor') {
+          $('#communitySelectWrapper').hide(); // 按评估员分配：隐藏社区选择
+        }
+      });
+
+      // 8. 批量分配线索
+      $('#batchAllocateBtn').click(function() {
+        const method = $('#allocationMethod').val();
+        const assessorId = $('#assessor').val();
+        let communityId = $('#community').val();
+
+        // 校验必填项
+        if (!assessorId) {
+          alert('请选择评估员！');
+          return;
+        }
+        if (method === 'community' && !communityId) {
+          alert('请选择社区/村镇！');
+          return;
+        }
+
+        // 模拟分配成功（实际项目中调用后端分配接口）
+        const assessorName = $('#assessor option:selected').text().split('（')[0];
+        const communityName = method === 'community' ? $('#community option:selected').text() : '';
+        const successMsg = method === 'community'
+          ? `已成功分配${$('#successCount').text()}条线索（社区：${communityName}）给${assessorName}`
+          : `已成功分配${$('#successCount').text()}条线索给${assessorName}`;
+
+        // 显示分配成功模态框
+        $('#allocateSuccessMsg').text(successMsg);
+        allocateSuccessModal.show();
+      });
+
+      // ------------------------------
+      //  手动导入相关逻辑
+      // ------------------------------
+
+      // 显示手动导入填写规范
+      $('#showManualImportRules').click(function() {
+        $('#instructionsModal .modal-title').text('手动导入填写规范');
+        $('#instructionsModal .modal-body').html(`
+          <div class="alert alert-warning">
+            <strong>重要提示：</strong>红色标记字段为外勤评估时必须填写的内容，蓝色字段由医保系统自动更新，无需手动录入。
+          </div>
+          
+          <h6 class="mb-3 text-danger">必填字段（红色标记）</h6>
+          <table class="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>字段名</th>
+                <th>格式要求</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>姓名</td>
+                <td>1-30个字符，不可为空</td>
+              </tr>
+              <tr>
+                <td>手机号</td>
+                <td>11位有效手机号码，格式：1[3-9]XXXXXXXXX</td>
+              </tr>
+              <tr>
+                <td>居住地小区/自然村</td>
+                <td>必须从下拉列表中选择，不可手动输入</td>
+              </tr>
+              <tr>
+                <td>具体住址</td>
+                <td>1-128个字符，不可为空</td>
+              </tr>
+              <tr class="table-danger">
+                <td><strong>外勤上门评估日期</strong></td>
+                <td>格式：YYYY-MM-DD，如：2024-05-20</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <h6 class="mb-3 mt-4">选填字段</h6>
+          <table class="table table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>字段名</th>
+                <th>说明</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>性别</td>
+                <td>服务对象性别</td>
+              </tr>
+              <tr>
+                <td>身份证号</td>
+                <td>填写后系统会自动计算出生日期</td>
+              </tr>
+              <tr>
+                <td>代理人姓名</td>
+                <td>代理人真实姓名</td>
+              </tr>
+              <tr>
+                <td>代理人手机号</td>
+                <td>代理人联系电话</td>
+              </tr>
+              <tr>
+                <td>代理人身份证号</td>
+                <td>代理人身份证号码</td>
+              </tr>
+              <tr>
+                <td>代理人关系</td>
+                <td>代理人与服务对象的关系</td>
+              </tr>
+              <tr>
+                <td>失能等级</td>
+                <td>轻度失能 / 中度失能 / 重度失能（一级/二级/三级）</td>
+              </tr>
+              <tr>
+                <td>医保类型</td>
+                <td>职工基本医疗保险 / 城乡居民基本医疗保险</td>
+              </tr>
+              <tr>
+                <td>残疾等级</td>
+                <td>肢体残疾一级 / 肢体残疾二级 / 肢体残疾三级</td>
+              </tr>
+              <tr>
+                <td>是否低保户</td>
+                <td>是否为低保户</td>
+              </tr>
+              <tr>
+                <td>失能原因</td>
+                <td>年老 / 疾病 / 意外 / 其他</td>
+              </tr>
+              <tr>
+                <td>是否本省异地参保</td>
+                <td>是否在本省其他地区参保</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <h6 class="mb-3 mt-4 text-primary">数据字典说明</h6>
+          <div class="row">
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>1.2 残疾等级 (disabled_level)</strong>
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>1 - 肢体残疾一级</li>
+                    <li>2 - 肢体残疾二级</li>
+                    <li>3 - 肢体残疾三级</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>1.3 保险类型 (insure_type)</strong>
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>1 - 职工基本医疗保险</li>
+                    <li>2 - 城乡居民基本医疗保险</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>1.4 失能等级 (disability_level)</strong>
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>包含：失能等级、照护等级、评估等级</li>
+                    <li>每月最大服务时长（小时）</li>
+                    <li>每月医保支付最高费用</li>
+                    <li>每周最低服务次数</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card mb-3">
+                <div class="card-header bg-light">
+                  <strong>1.5 失能原因 (disability_reason)</strong>
+                </div>
+                <div class="card-body">
+                  <ul class="mb-0">
+                    <li>1 - 年老</li>
+                    <li>2 - 疾病</li>
+                    <li>3 - 意外</li>
+                    <li>4 - 其他</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="alert alert-info mt-3">
+            <strong>填写注意事项：</strong>
+            <ul class="mb-0">
+              <li>身份证号填写后，系统会自动计算出生日期和年龄</li>
+              <li>手机号必须为11位有效号码，格式：1[3-9]开头的11位数字</li>
+              <li>日期格式必须为：YYYY-MM-DD，如：2024-05-20</li>
+              <li>下拉选择字段必须从系统提供的选项中选择，不可手动输入</li>
+              <li>姓名、手机号、居住地、住址为必填项，其他字段可根据实际情况选填</li>
+              <li>外勤上门评估日期为外勤评估时的必填项（红色标记）</li>
+            </ul>
+          </div>
+        `);
+        instructionsModal.show();
+      });
+
+      // 添加手动导入行
+      $('#addManualImportRow').click(function() {
+        manualImportRowCount++;
+        const rowHtml = `
+          <tr data-row-id="${manualImportRowCount}">
+            <td class="text-center">${manualImportRowCount}</td>
+            <td>
+              <input type="text" class="form-control form-control-sm required-field" name="name" placeholder="请输入姓名" required>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="gender">
+                <option value="">请选择</option>
+                <option value="男">男</option>
+                <option value="女">女</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" name="selfid" placeholder="18位身份证号" maxlength="18">
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm required-field" name="phone_num" placeholder="11位手机号" maxlength="11" required>
+            </td>
+            <td>
+              <select class="form-control form-control-sm required-field" name="cell_id" required>
+                <option value="">请选择</option>
+                <option value="1">社区A</option>
+                <option value="2">社区B</option>
+                <option value="3">村镇C</option>
+                <option value="4">村镇D</option>
+              </select>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm required-field" name="address" placeholder="详细地址" required>
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" name="agent" placeholder="代理人姓名">
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" name="agt_phone_num" placeholder="11位手机号" maxlength="11">
+            </td>
+            <td>
+              <input type="text" class="form-control form-control-sm" name="agent_id" placeholder="18位身份证号" maxlength="18">
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="relation">
+                <option value="">请选择</option>
+                <option value="1">配偶</option>
+                <option value="2">子女</option>
+                <option value="3">父母</option>
+                <option value="4">其他</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="dis_level" title="失能等级：从数据字典1.4中选择">
+                <option value="">请选择</option>
+                <option value="1">轻度失能</option>
+                <option value="2">中度失能</option>
+                <option value="3">重度失能（一级）</option>
+                <option value="4">重度失能（二级）</option>
+                <option value="5">重度失能（三级）</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="insure_type" title="保险类型：从数据字典1.3中选择">
+                <option value="">请选择</option>
+                <option value="1">职工基本医疗保险</option>
+                <option value="2">城乡居民基本医疗保险</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="disabled_level" title="残疾等级：从数据字典1.2中选择">
+                <option value="">请选择</option>
+                <option value="1">肢体残疾一级</option>
+                <option value="2">肢体残疾二级</option>
+                <option value="3">肢体残疾三级</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="mla">
+                <option value="">请选择</option>
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="dis_reason" title="失能原因：从数据字典1.5中选择">
+                <option value="">请选择</option>
+                <option value="1">年老</option>
+                <option value="2">疾病</option>
+                <option value="3">意外</option>
+                <option value="4">其他</option>
+              </select>
+            </td>
+            <td>
+              <select class="form-control form-control-sm" name="other_region">
+                <option value="">请选择</option>
+                <option value="1">是</option>
+                <option value="0">否</option>
+              </select>
+            </td>
+            <td>
+              <input type="date" class="form-control form-control-sm red-field" name="tab_date" required>
+            </td>
+            <td class="text-center">
+              <button class="btn btn-sm btn-danger remove-row-btn">
+                <i class="fa fa-trash"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+        $('#manualImportTableBody').append(rowHtml);
+        
+        // 绑定删除按钮事件
+        $(`tr[data-row-id="${manualImportRowCount}"] .remove-row-btn`).click(function() {
+          $(this).closest('tr').remove();
+          updateManualImportRowNumbers();
+        });
+        
+        // 绑定输入框事件：清除错误状态
+        $(`tr[data-row-id="${manualImportRowCount}"] input, tr[data-row-id="${manualImportRowCount}"] select`).on('input change', function() {
+          $(this).removeClass('is-invalid');
+        });
+      });
+
+      // 更新行号
+      function updateManualImportRowNumbers() {
+        $('#manualImportTableBody tr').each(function(index) {
+          $(this).find('td:first').text(index + 1);
+        });
+      }
+
+      // 清空所有手动导入数据
+      $('#clearManualImport').click(function() {
+        if (confirm('确定要清空所有已输入的数据吗？')) {
+          $('#manualImportTableBody').empty();
+          manualImportRowCount = 0;
+          $('#manualImportResultsArea').hide();
+        }
+      });
+
+      // 开始手动导入
+      $('#startManualImport').click(function() {
+        const rows = $('#manualImportTableBody tr');
+        if (rows.length === 0) {
+          alert('请至少添加一条数据！');
+          return;
+        }
+
+        // 收集数据并验证
+        const importData = [];
+        let hasError = false;
+        let errorMsg = '';
+        
+        // 清除所有之前的错误状态
+        rows.find('input, select').removeClass('is-invalid');
+
+        rows.each(function(index) {
+          const row = $(this);
+          const name = row.find('input[name="name"]').val().trim();
+          const phone_num = row.find('input[name="phone_num"]').val().trim();
+          const cell_id = row.find('select[name="cell_id"]').val();
+          const address = row.find('input[name="address"]').val().trim();
+          const tab_date = row.find('input[name="tab_date"]').val(); // 红色字段
+
+          // 基本验证
+          if (!name || name.length > 30) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：请输入姓名（1-30个字符）`;
+            row.find('input[name="name"]').addClass('is-invalid');
+            return false;
+          }
+          
+          if (!phone_num || !/^1[3-9]\d{9}$/.test(phone_num)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：请输入有效的11位手机号码（格式：1[3-9]开头的11位数字）`;
+            row.find('input[name="phone_num"]').addClass('is-invalid');
+            return false;
+          }
+          
+          if (!cell_id) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：请选择居住地小区/自然村`;
+            row.find('select[name="cell_id"]').addClass('is-invalid');
+            return false;
+          }
+          
+          if (!address || address.length > 128) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：请输入具体住址（1-128个字符）`;
+            row.find('input[name="address"]').addClass('is-invalid');
+            return false;
+          }
+          
+          if (!tab_date) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：请输入外勤上门评估日期（红色字段，格式：YYYY-MM-DD）`;
+            row.find('input[name="tab_date"]').addClass('is-invalid');
+            return false;
+          }
+          
+          // 验证日期格式
+          if (tab_date && !/^\d{4}-\d{2}-\d{2}$/.test(tab_date)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：外勤上门评估日期格式错误，应为YYYY-MM-DD格式`;
+            row.find('input[name="tab_date"]').addClass('is-invalid');
+            return false;
+          }
+          
+          // 验证身份证号格式（如果填写）
+          const selfid = row.find('input[name="selfid"]').val().trim();
+          if (selfid && !/^(\d{15}|\d{17}[\dXx])$/.test(selfid)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：身份证号格式错误，应为15位或18位`;
+            row.find('input[name="selfid"]').addClass('is-invalid');
+            return false;
+          }
+          
+          // 验证代理人手机号（如果填写）
+          const agt_phone_num = row.find('input[name="agt_phone_num"]').val().trim();
+          if (agt_phone_num && !/^1[3-9]\d{9}$/.test(agt_phone_num)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：代理人手机号格式错误，应为11位有效手机号`;
+            row.find('input[name="agt_phone_num"]').addClass('is-invalid');
+            return false;
+          }
+          
+          // 验证代理人身份证号（如果填写）
+          const agent_id = row.find('input[name="agent_id"]').val().trim();
+          if (agent_id && !/^(\d{15}|\d{17}[\dXx])$/.test(agent_id)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：代理人身份证号格式错误，应为15位或18位`;
+            row.find('input[name="agent_id"]').addClass('is-invalid');
+            return false;
+          }
+          
+          // 验证下拉选择字段的值是否在数据字典范围内
+          const dis_level = row.find('select[name="dis_level"]').val();
+          if (dis_level && !['1', '2', '3', '4', '5'].includes(dis_level)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：失能等级选择无效，请从数据字典1.4中选择`;
+            row.find('select[name="dis_level"]').addClass('is-invalid');
+            return false;
+          }
+          
+          const insure_type = row.find('select[name="insure_type"]').val();
+          if (insure_type && !['1', '2'].includes(insure_type)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：医保类型选择无效，请从数据字典1.3中选择`;
+            row.find('select[name="insure_type"]').addClass('is-invalid');
+            return false;
+          }
+          
+          const disabled_level = row.find('select[name="disabled_level"]').val();
+          if (disabled_level && !['1', '2', '3'].includes(disabled_level)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：残疾等级选择无效，请从数据字典1.2中选择`;
+            row.find('select[name="disabled_level"]').addClass('is-invalid');
+            return false;
+          }
+          
+          const dis_reason = row.find('select[name="dis_reason"]').val();
+          if (dis_reason && !['1', '2', '3', '4'].includes(dis_reason)) {
+            hasError = true;
+            errorMsg = `第${index + 1}行：失能原因选择无效，请从数据字典1.5中选择`;
+            row.find('select[name="dis_reason"]').addClass('is-invalid');
+            return false;
+          }
+
+          // 收集所有字段数据
+          const rowData = {
+            row: index + 1,
+            name: name,
+            gender: row.find('select[name="gender"]').val(),
+            selfid: row.find('input[name="selfid"]').val().trim(),
+            phone_num: phone_num,
+            cell_id: cell_id,
+            address: address,
+            agent: row.find('input[name="agent"]').val().trim(),
+            agt_phone_num: row.find('input[name="agt_phone_num"]').val().trim(),
+            agent_id: row.find('input[name="agent_id"]').val().trim(),
+            relation: row.find('select[name="relation"]').val(),
+            dis_level: row.find('select[name="dis_level"]').val(),
+            insure_type: row.find('select[name="insure_type"]').val(),
+            disabled_level: row.find('select[name="disabled_level"]').val(),
+            mla: row.find('select[name="mla"]').val(),
+            dis_reason: row.find('select[name="dis_reason"]').val(),
+            other_region: row.find('select[name="other_region"]').val(),
+            tab_date: tab_date // 红色字段
+          };
+
+          importData.push(rowData);
+        });
+
+        if (hasError) {
+          alert(errorMsg);
+          return;
+        }
+
+        // 显示处理中模态框
+        importingModal.show();
+
+        // 模拟导入过程
+        setTimeout(() => {
+          importingModal.hide();
+
+          // 模拟校验结果
+          const { successCount, errorCount, errors } = mockManualImportValidation(importData);
+          
+          // 更新结果区域
+          $('#manualImportSuccessCount').text(successCount);
+          $('#manualImportErrorCount').text(errorCount);
+          
+          // 清空并填充错误表格
+          const errorTableBody = $('#manualImportErrorTableBody');
+          errorTableBody.empty();
+          if (errors.length > 0) {
+            $('#manualImportErrorContainer').show();
+            errors.forEach(error => {
+              errorTableBody.append(`
+                <tr>
+                  <td>${error.row}</td>
+                  <td>${error.name}</td>
+                  <td>${error.idCard || ''}</td>
+                  <td class="text-danger">${error.reason}</td>
+                </tr>
+              `);
+            });
+          } else {
+            $('#manualImportErrorContainer').hide();
+          }
+          
+          // 显示结果区域
+          $('#manualImportResultsArea').show();
+
+        }, 2000);
+      });
+
+      // 重新导入手动数据
+      $('#retryManualImport').click(function() {
+        $('#manualImportResultsArea').hide();
+      });
+
+      // 模拟手动导入校验
+      function mockManualImportValidation(importData) {
+        const errors = [];
+        const totalCount = importData.length;
+        
+        // 模拟一些可能的错误
+        importData.forEach((item) => {
+          // 模拟身份证号重复检查
+          if (item.selfid && item.selfid.includes('123456')) {
+            errors.push({
+              row: item.row,
+              name: item.name,
+              idCard: item.selfid,
+              reason: '身份证号已存在，不允许重复导入'
+            });
+          }
+          // 模拟身份证号格式验证
+          else if (item.selfid && item.selfid.length !== 18 && item.selfid.length !== 15) {
+            errors.push({
+              row: item.row,
+              name: item.name,
+              idCard: item.selfid,
+              reason: '身份证号格式错误，应为15位或18位'
+            });
+          }
+          // 模拟其他验证错误（随机生成一些错误）
+          else if (Math.random() < 0.1 && item.row > 1) {
+            errors.push({
+              row: item.row,
+              name: item.name,
+              idCard: item.selfid,
+              reason: '数据格式验证失败，请检查必填字段'
+            });
+          }
+        });
+        
+        const errorCount = errors.length;
+        const successCount = totalCount - errorCount;
+        
+        return { successCount, errorCount, errors };
+      }
+    });
+  </script>
+</body>
+</html>

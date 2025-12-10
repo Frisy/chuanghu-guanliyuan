@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>医保对账数据管理 - 居家长护业务管理系统</title>
+  <!-- 引入外部资源 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <style>
+    /* 继承全局样式 */
+    body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+    .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+    .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+    .btn-outline-secondary { border-color: #ddd; color: #666; }
+    .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+    .btn-danger { background-color: #FF4D4F; border-color: #FF4D4F; }
+    .btn-danger:hover { background-color: #F5222D; border-color: #F5222D; }
+    .btn-success { background-color: #52C41A; border-color: #52C41A; }
+    .btn-success:hover { background-color: #41A819; border-color: #41A819; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; }
+    .card-body { padding: 20px; }
+    /* 布局样式 */
+    .app-container { display: flex; min-height: 100vh; }
+    /* 侧边导航 */
+    .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+    .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+    .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+    .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+    .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+    /* 主内容区 */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+    /* 顶部导航 */
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+    .user-info { display: flex; align-items: center; }
+    .notification { position: relative; margin-right: 20px; cursor: pointer; }
+    .notification i { font-size: 20px; color: #666; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+    .user-name { font-size: 14px; font-weight: 500; }
+    
+    /* 对账页面专属样式 */
+    .generate-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px; align-items: center; }
+    .filter-group { flex: 1; min-width: 200px; }
+    .filter-label { font-weight: 500; margin-right: 10px; white-space: nowrap; }
+    .form-control, .form-select { border-radius: 6px; border: 1px solid #ddd; }
+    .btn-generate { background: #1890FF; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-generate:hover { background: #096DD9; }
+    
+    .upload-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 2px dashed #d9d9d9; text-align: center; transition: border-color 0.3s; }
+    .upload-section:hover { border-color: #1890FF; }
+    .upload-icon { font-size: 36px; color: #1890FF; margin-bottom: 15px; }
+    .upload-text { margin-bottom: 15px; color: #666; }
+    .upload-hint { font-size: 12px; color: #999; margin-top: 10px; }
+    #fileInput { display: none; }
+    
+    .status-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+    .status-title { font-weight: 600; margin-bottom: 15px; }
+    .status-item { display: flex; align-items: center; margin-bottom: 10px; }
+    .status-dot { width: 12px; height: 12px; border-radius: 50%; margin-right: 10px; }
+    .status-dot.success { background-color: #52C41A; }
+    .status-dot.warning { background-color: #FAAD14; }
+    .status-dot.error { background-color: #FF4D4F; }
+    .status-dot.pending { background-color: #1890FF; }
+    
+    /* 比对结果页面样式 */
+    .result-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .result-actions { display: flex; gap: 10px; }
+    .btn-export { background: #52C41A; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-export:hover { background: #41A819; }
+    .btn-recompare { background: #fff; color: #1890FF; border: 1px solid #1890FF; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+    .btn-recompare:hover { background: #f0f7ff; }
+    
+    .filter-result { background: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+    
+    .data-table { background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
+    .table-header { background: #f8f9fa; padding: 12px 20px; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
+    .table-responsive { max-height: 500px; overflow-y: auto; }
+    .table th, .table td { vertical-align: middle; padding: 12px 20px; border-bottom: 1px solid #f0f0f0; }
+    .table th { background: #f8f9fa; font-weight: 500; text-align: center; }
+    .table tbody tr:hover { background: #f9f9f9; }
+    .table tbody tr.data-match { background-color: rgba(82, 196, 26, 0.1); }
+    .table tbody tr.data-mismatch { background-color: rgba(250, 173, 20, 0.1); }
+    .table tbody tr.data-missing { background-color: rgba(255, 77, 79, 0.1); }
+    .badge-match { background-color: #52C41A; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+    .badge-mismatch { background-color: #FAAD14; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+    .badge-missing { background-color: #FF4D4F; color: #fff; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
+    
+    .action-btn { padding: 4px 8px; font-size: 12px; }
+    
+    /* 分页样式 */
+    .pagination-container { display: flex; justify-content: center; margin-top: 20px; }
+    .pagination { display: flex; list-style: none; padding: 0; }
+    .pagination li { margin: 0 5px; }
+    .pagination li a { display: block; padding: 5px 12px; border: 1px solid #ddd; border-radius: 4px; text-decoration: none; color: #666; }
+    .pagination li a:hover { background-color: #f5f5f5; border-color: #ccc; }
+    .pagination li.active a { background-color: #1890FF; color: #fff; border-color: #1890FF; }
+    
+    /* 模态框样式 */
+    .modal-header { border-bottom: 1px solid #f0f0f0; }
+    .modal-title { font-weight: 600; }
+    .modal-body { max-height: 500px; overflow-y: auto; }
+    .form-group { margin-bottom: 15px; }
+    .form-label { font-weight: 500; margin-bottom: 5px; }
+    .reason-input { resize: none; }
+    
+    /* 批量操作样式 */
+    .batch-operation { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+    .batch-checkbox { margin-right: 5px; }
+    .batch-btn { padding: 5px 12px; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+          <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+          <h3>管理员工作平台</h3>
+      </div>
+      
+      <!-- 导航分组：系统配置 -->
+      <div class="nav-group-title">系统配置</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="机构信息配置.html" class="nav-link">
+                  <i class="fa fa-building-o"></i>
+                  <span>机构信息配置</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="套餐管理.html" class="nav-link">
+                  <i class="fa fa-cog"></i>
+                  <span>套餐管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="行政区划.html" class="nav-link">
+                  <i class="fa fa-book"></i>
+                  <span>行政区域管理</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：用户管理 -->
+      <div class="nav-group-title">用户管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="角色配置.html" class="nav-link">
+                  <i class="fa fa-user-secret"></i>
+                  <span>角色权限配置</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：日志管理 -->
+      <div class="nav-group-title">数据管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="服务线索批量导入.html" class="nav-link">
+                  <i class="fa fa-upload"></i>
+                  <span>服务对象数据批量导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="服务对象数据维护.html" class="nav-link">
+                  <i class="fa fa-edit"></i>
+                  <span>服务对象数据维护</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保工单导入.html" class="nav-link">
+                  <i class="fa fa-file-excel-o"></i>
+                  <span>医保平台工单导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保平台新增服务对象数据.html" class="nav-link">
+                  <i class="fa fa-download"></i>
+                  <span>医保平台新增服务对象数据导出</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保对账数据管理.html" class="nav-link active">
+                  <i class="fa fa-calculator"></i>
+                  <span>医保对账数据管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="关键数据配置.html" class="nav-link">
+                  <i class="fa fa-wrench"></i>
+                  <span>其他数据维护</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 顶部导航：标题 + 操作按钮 -->
+      <div class="top-nav">
+        <h1 class="page-title">医保对账数据管理</h1>
+        <div class="user-info">
+          <div class="notification">
+            <i class="fa fa-bell-o"></i>
+            <span class="notification-badge">3</span>
+          </div>
+          <div class="user-avatar">管</div>
+          <div class="user-name">系统管理员</div>
+        </div>
+      </div>
+
+      <!-- 初始状态：生成对账单 -->
+      <div id="initial-state">
+        <!-- 生成对账单区域 -->
+        <div class="generate-section">
+          <div class="filter-row">
+            <div class="filter-group">
+              <label class="filter-label">对账月份：</label>
+              <input type="month" id="reconciliationMonth" class="form-control" value="2025-10">
+            </div>
+            <div class="filter-group">
+              <label class="filter-label">行政区域：</label>
+              <select id="regionSelect" class="form-select">
+                <option value="">请选择行政区域</option>
+                <option value="shaoxing">绍兴市</option>
+                <option value="shaoxing_shengzhou">绍兴市-嵊州市</option>
+                <option value="shaoxing_keqiao">绍兴市-柯桥区</option>
+                <option value="hangzhou">杭州市</option>
+                <option value="ningbo">宁波市</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <button id="generateBtn" class="btn-generate">
+                <i class="fa fa-calculator"></i> 生成对账单
+              </button>
+            </div>
+          </div>
+          
+          <div class="status-section">
+            <div class="status-title">对账状态</div>
+            <div class="status-item">
+              <span class="status-dot pending"></span>
+              <span>对账单生成：未生成</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot pending"></span>
+              <span>医保数据导入：未导入</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot pending"></span>
+              <span>数据比对：未比对</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot pending"></span>
+              <span>差异处理：未处理</span>
+            </div>
+            <div class="status-item">
+              <span class="status-dot pending"></span>
+              <span>对账单导出：未导出</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 上传医保数据区域 -->
+        <div class="upload-section">
+          <input type="file" id="fileInput" accept=".xlsx, .xls">
+          <div class="upload-icon">
+            <i class="fa fa-cloud-upload"></i>
+          </div>
+          <div class="upload-text">
+            <h5>点击上传医保数据</h5>
+            <p>支持格式：.xlsx, .xls</p>
+          </div>
+          <button id="uploadBtn" class="btn btn-primary">选择文件</button>
+          <div class="upload-hint">
+            <p>提示：请上传医保平台导出的对账数据文件</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 比对结果状态 -->
+      <div id="result-state" style="display: none;">
+        <!-- 结果页顶部操作 -->
+        <div class="result-header">
+          <div>
+            <span>对账月份：</span>
+            <span id="resultMonth">2025年10月</span>
+            <span style="margin-left: 20px;">行政区域：</span>
+            <span id="resultRegion">绍兴市-嵊州市</span>
+          </div>
+          <div class="result-actions">
+            <button id="exportResultBtn" class="btn-export">
+              <i class="fa fa-download"></i> 导出对账单
+            </button>
+            <button id="recompareBtn" class="btn-recompare">
+              <i class="fa fa-refresh"></i> 重新比对
+            </button>
+          </div>
+        </div>
+        
+        <!-- 筛选结果区域 -->
+        <div class="filter-result">
+          <div class="filter-group">
+            <label class="filter-label">差异类型：</label>
+            <select id="differenceType" class="form-select" style="width: auto; display: inline-block;">
+              <option value="all">全部数据</option>
+              <option value="match">数据一致</option>
+              <option value="mismatch">费用差异</option>
+              <option value="missing">缺失数据</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label class="filter-label">搜索：</label>
+            <input type="text" id="searchInput" class="form-control" placeholder="输入姓名或身份证号搜索" style="width: auto; display: inline-block;">
+          </div>
+          <div class="filter-group">
+            <button id="searchBtn" class="btn btn-outline-secondary">
+              <i class="fa fa-search"></i> 搜索
+            </button>
+          </div>
+        </div>
+        
+        <!-- 批量操作 -->
+        <div class="batch-operation">
+          <input type="checkbox" id="batchCheckAll">
+          <label for="batchCheckAll">全选差异项</label>
+          <button id="batchEditBtn" class="btn btn-primary batch-btn" disabled>
+            <i class="fa fa-edit"></i> 批量修改
+          </button>
+        </div>
+        
+        <!-- 数据比对结果表格 -->
+        <div class="data-table">
+          <div class="table-header">
+            <label>
+              <input type="checkbox" id="checkAllResult">
+              <span>全选</span>
+            </label>
+            <span style="margin-left: 10px;">共 <strong id="totalResultCount">0</strong> 条数据</span>
+            <span style="margin-left: 20px;">差异统计：</span>
+            <span style="margin-left: 10px;"><span class="badge-match">一致 23</span></span>
+            <span style="margin-left: 10px;"><span class="badge-mismatch">差异 5</span></span>
+            <span style="margin-left: 10px;"><span class="badge-missing">缺失 2</span></span>
+          </div>
+          <div class="table-responsive">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width: 60px;">选择</th>
+                  <th>序号</th>
+                  <th>服务对象信息</th>
+                  <th>服务日期</th>
+                  <th>机构数据</th>
+                  <th>医保数据</th>
+                  <th>差异类型</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="resultTableBody">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+        
+        <!-- 分页控件 -->
+        <div class="pagination-container">
+          <ul class="pagination">
+            <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 修改数据模态框 -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">修改对账数据</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editForm">
+            <input type="hidden" id="editRecordId">
+            
+            <div class="form-group">
+              <label class="form-label">服务对象姓名：</label>
+              <input type="text" id="editName" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">身份证号：</label>
+              <input type="text" id="editIdCard" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">服务日期：</label>
+              <input type="date" id="editServiceDate" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">机构服务时长（分钟）：</label>
+              <input type="number" id="editOrgDuration" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">机构计费时长（分钟）：</label>
+              <input type="number" id="editOrgBillableDuration" class="form-control">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">机构计算费用（元）：</label>
+              <input type="number" id="editOrgAmount" class="form-control" step="0.01">
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">调整原因：</label>
+              <textarea id="editReason" class="form-control reason-input" rows="3" required placeholder="请填写调整原因，如：医保平台统计口径调整"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" id="saveEditBtn" class="btn btn-primary">保存修改</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 批量修改模态框 -->
+  <div class="modal fade" id="batchEditModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">批量修改差异数据</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="batchEditForm">
+            <div class="form-group">
+              <label class="form-label">调整原因：</label>
+              <textarea id="batchEditReason" class="form-control reason-input" rows="3" required placeholder="请填写调整原因，如：医保平台统计口径调整"></textarea>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label">是否统一调整费用：</label>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="adjustAmount" id="adjustAmountYes" value="yes">
+                <label class="form-check-label" for="adjustAmountYes">
+                  是，按医保数据调整
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="adjustAmount" id="adjustAmountNo" value="no" checked>
+                <label class="form-check-label" for="adjustAmountNo">
+                  否，仅填写调整原因
+                </label>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" id="saveBatchEditBtn" class="btn btn-primary">保存修改</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示模态框 -->
+  <div class="modal fade" id="promptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="fa fa-info-circle text-primary" style="font-size: 36px; margin-bottom: 15px;"></i>
+          <h5 class="modal-title" id="promptTitle">操作提示</h5>
+          <p class="text-muted" id="promptMsg">正在处理，请稍后...</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 处理中模态框 -->
+  <div class="modal fade" id="processingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <h5 class="modal-title mt-3" id="processingTitle">处理中</h5>
+          <p class="text-muted" id="processingMsg">正在生成对账单，请不要关闭此窗口...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 页面加载完成后初始化
+    $(function() {
+      // 初始化模态框
+      const editModal = new bootstrap.Modal('#editModal');
+      const batchEditModal = new bootstrap.Modal('#batchEditModal');
+      const promptModal = new bootstrap.Modal('#promptModal');
+      const processingModal = new bootstrap.Modal('#processingModal');
+
+      // 全局变量
+      let currentMonth = '2025-10';
+      let currentRegion = '';
+      let currentRegionName = '';
+      let reconciliationData = []; // 对账数据
+      let selectedRecords = []; // 选中的记录ID
+
+      // 生成对账单按钮点击事件
+      $('#generateBtn').click(function() {
+        currentMonth = $('#reconciliationMonth').val();
+        currentRegion = $('#regionSelect').val();
+        
+        if (!currentMonth) {
+          showPrompt('操作提示', '请选择对账月份！');
+          return;
+        }
+        
+        if (!currentRegion) {
+          showPrompt('操作提示', '请选择行政区域！');
+          return;
+        }
+        
+        // 获取区域名称
+        currentRegionName = $('#regionSelect option:selected').text();
+        
+        // 显示处理中模态框
+        $('#processingTitle').text('生成对账单');
+        $('#processingMsg').text('正在生成对账单，请不要关闭此窗口...');
+        processingModal.show();
+        
+        // 模拟生成对账单
+        setTimeout(() => {
+          // 模拟生成的数据
+          generateMockData();
+          
+          // 更新状态
+          updateStatus();
+          
+          // 关闭处理中模态框
+          processingModal.hide();
+          
+          // 显示提示
+          showPrompt('操作成功', `成功生成${currentRegionName}${currentMonth}对账单，共${reconciliationData.length}条记录！`);
+        }, 2000);
+      });
+
+      // 上传文件按钮点击事件
+      $('#uploadBtn').click(function() {
+        $('#fileInput').click();
+      });
+
+      // 文件选择事件
+      $('#fileInput').change(function(e) {
+        const file = e.target.files[0];
+        if (file) {
+          // 检查文件格式
+          const fileExt = file.name.split('.').pop().toLowerCase();
+          if (fileExt !== 'xlsx' && fileExt !== 'xls') {
+            showPrompt('格式错误', '请上传Excel格式的文件（.xlsx或.xls）！');
+            return;
+          }
+          
+          // 显示处理中模态框
+          $('#processingTitle').text('导入医保数据');
+          $('#processingMsg').text('正在导入并比对数据，请不要关闭此窗口...');
+          processingModal.show();
+          
+          // 模拟文件上传和数据比对
+          setTimeout(() => {
+            // 模拟比对数据
+            mockDataComparison();
+            
+            // 更新状态
+            updateStatus();
+            
+            // 切换到结果页面
+            $('#initial-state').hide();
+            $('#result-state').show();
+            
+            // 更新结果页面信息
+            $('#resultMonth').text(`${currentMonth}月`);
+            $('#resultRegion').text(currentRegionName);
+            
+            // 渲染结果表格
+            renderResultTable();
+            
+            // 关闭处理中模态框
+            processingModal.hide();
+            
+            // 显示提示
+            showPrompt('操作成功', '医保数据导入成功并完成比对！');
+          }, 2500);
+        }
+      });
+
+      // 重新比对按钮点击事件
+      $('#recompareBtn').click(function() {
+        // 显示处理中模态框
+        $('#processingTitle').text('重新比对数据');
+        $('#processingMsg').text('正在重新比对数据，请不要关闭此窗口...');
+        processingModal.show();
+        
+        // 模拟重新比对
+        setTimeout(() => {
+          // 模拟比对数据
+          mockDataComparison();
+          
+          // 渲染结果表格
+          renderResultTable();
+          
+          // 关闭处理中模态框
+          processingModal.hide();
+          
+          // 显示提示
+          showPrompt('操作成功', '数据重新比对完成！');
+        }, 1500);
+      });
+
+      // 导出对账单按钮点击事件
+      $('#exportResultBtn').click(function() {
+        // 显示处理中模态框
+        $('#processingTitle').text('导出对账单');
+        $('#processingMsg').text('正在生成并导出对账单，请不要关闭此窗口...');
+        processingModal.show();
+        
+        // 模拟导出
+        setTimeout(() => {
+          // 关闭处理中模态框
+          processingModal.hide();
+          
+          // 生成文件名
+          const fileName = `${currentRegionName}${currentMonth}医保对账单.xlsx`;
+          
+          // 显示提示
+          showPrompt('导出成功', `对账单已成功导出！<br>文件名：${fileName}`);
+        }, 1500);
+      });
+
+      // 搜索按钮点击事件
+      $('#searchBtn').click(function() {
+        filterResultTable();
+      });
+
+      // 差异类型筛选事件
+      $('#differenceType').change(function() {
+        filterResultTable();
+      });
+
+      // 搜索框回车事件
+      $('#searchInput').keypress(function(e) {
+        if (e.which === 13) {
+          filterResultTable();
+        }
+      });
+
+      // 全选复选框事件
+      $('#checkAllResult').change(function() {
+        const isChecked = $(this).prop('checked');
+        $('input[name="resultItem"]').prop('checked', isChecked);
+        
+        // 更新选中的记录
+        selectedRecords = isChecked ? 
+          reconciliationData.map(item => item.id) : 
+          [];
+      });
+
+      // 批量操作全选复选框事件
+      $('#batchCheckAll').change(function() {
+        const isChecked = $(this).prop('checked');
+        // 只选中差异项
+        $('input[name="resultItem"][data-diff="mismatch"], input[name="resultItem"][data-diff="missing"]').prop('checked', isChecked);
+        
+        // 更新选中的记录
+        if (isChecked) {
+          selectedRecords = reconciliationData
+            .filter(item => item.differenceType === 'mismatch' || item.differenceType === 'missing')
+            .map(item => item.id);
+        } else {
+          selectedRecords = [];
+        }
+        
+        // 更新批量修改按钮状态
+        $('#batchEditBtn').prop('disabled', selectedRecords.length === 0);
+      });
+
+      // 单个记录选择事件
+      $(document).on('change', 'input[name="resultItem"]', function() {
+        const id = $(this).val();
+        const isChecked = $(this).prop('checked');
+        
+        if (isChecked) {
+          if (!selectedRecords.includes(id)) {
+            selectedRecords.push(id);
+          }
+        } else {
+          selectedRecords = selectedRecords.filter(item => item !== id);
+        }
+        
+        // 更新全选框状态
+        const totalItems = $('input[name="resultItem"]').length;
+        const checkedItems = $('input[name="resultItem"]:checked').length;
+        $('#checkAllResult').prop('checked', totalItems > 0 && totalItems === checkedItems);
+        
+        // 更新批量修改按钮状态
+        $('#batchEditBtn').prop('disabled', selectedRecords.length === 0);
+      });
+
+      // 批量修改按钮点击事件
+      $('#batchEditBtn').click(function() {
+        if (selectedRecords.length === 0) {
+          showPrompt('操作提示', '请至少选择一条记录进行批量修改！');
+          return;
+        }
+        
+        // 重置表单
+        $('#batchEditReason').val('');
+        $('#adjustAmountNo').prop('checked', true);
+        
+        // 显示批量修改模态框
+        batchEditModal.show();
+      });
+
+      // 保存批量修改按钮点击事件
+      $('#saveBatchEditBtn').click(function() {
+        const reason = $('#batchEditReason').val();
+        const adjustAmount = $('input[name="adjustAmount"]:checked').val();
+        
+        if (!reason) {
+          showPrompt('操作提示', '请填写调整原因！');
+          return;
+        }
+        
+        // 显示处理中模态框
+        $('#processingTitle').text('批量修改数据');
+        $('#processingMsg').text(`正在批量修改${selectedRecords.length}条记录，请不要关闭此窗口...`);
+        processingModal.show();
+        
+        // 模拟批量修改
+        setTimeout(() => {
+          // 应用修改
+          reconciliationData.forEach(item => {
+            if (selectedRecords.includes(item.id)) {
+              item.adjustReason = reason;
+              item.isAdjusted = true;
+              
+              // 如果选择按医保数据调整
+              if (adjustAmount === 'yes') {
+                item.orgBillableDuration = item.medicalDuration;
+                item.orgAmount = item.medicalAmount;
+                
+                // 重新判断差异类型
+                if (item.orgAmount === item.medicalAmount) {
+                  item.differenceType = 'match';
+                }
+              }
+            }
+          });
+          
+          // 重新渲染表格
+          renderResultTable();
+          
+          // 关闭模态框
+          batchEditModal.hide();
+          processingModal.hide();
+          
+          // 清空选择
+          selectedRecords = [];
+          $('#batchCheckAll').prop('checked', false);
+          $('#batchEditBtn').prop('disabled', true);
+          
+          // 显示提示
+          showPrompt('操作成功', `成功批量修改${selectedRecords.length}条记录！`);
+        }, 1500);
+      });
+
+      // 修改按钮点击事件
+      $(document).on('click', '.edit-btn', function() {
+        const id = $(this).data('id');
+        const record = reconciliationData.find(item => item.id === id);
+        
+        if (record) {
+          // 填充表单数据
+          $('#editRecordId').val(record.id);
+          $('#editName').val(record.name);
+          $('#editIdCard').val(record.idCard);
+          $('#editServiceDate').val(record.serviceDate);
+          $('#editOrgDuration').val(record.orgDuration);
+          $('#editOrgBillableDuration').val(record.orgBillableDuration);
+          $('#editOrgAmount').val(record.orgAmount);
+          $('#editReason').val(record.adjustReason || '');
+          
+          // 显示模态框
+          editModal.show();
+        }
+      });
+
+      // 保存修改按钮点击事件
+      $('#saveEditBtn').click(function() {
+        const id = $('#editRecordId').val();
+        const orgDuration = $('#editOrgDuration').val();
+        const orgBillableDuration = $('#editOrgBillableDuration').val();
+        const orgAmount = $('#editOrgAmount').val();
+        const reason = $('#editReason').val();
+        
+        if (!reason) {
+          showPrompt('操作提示', '请填写调整原因！');
+          return;
+        }
+        
+        const recordIndex = reconciliationData.findIndex(item => item.id === id);
+        if (recordIndex !== -1) {
+          // 更新数据
+          reconciliationData[recordIndex].orgDuration = orgDuration;
+          reconciliationData[recordIndex].orgBillableDuration = orgBillableDuration;
+          reconciliationData[recordIndex].orgAmount = parseFloat(orgAmount);
+          reconciliationData[recordIndex].adjustReason = reason;
+          reconciliationData[recordIndex].isAdjusted = true;
+          
+          // 重新判断差异类型
+          if (reconciliationData[recordIndex].orgAmount === reconciliationData[recordIndex].medicalAmount) {
+            reconciliationData[recordIndex].differenceType = 'match';
+          }
+          
+          // 关闭模态框
+          editModal.hide();
+          
+          // 重新渲染表格
+          renderResultTable();
+          
+          // 显示提示
+          showPrompt('操作成功', '数据修改成功！');
+        }
+      });
+
+      // 生成模拟数据
+      function generateMockData() {
+        // 清空现有数据
+        reconciliationData = [];
+        
+        // 生成30条模拟数据
+        for (let i = 1; i <= 30; i++) {
+          const isMatch = Math.random() > 0.3; // 70%的数据一致
+          const isMissing = Math.random() > 0.9; // 10%的数据缺失
+          
+          let differenceType = 'match';
+          if (isMissing) {
+            differenceType = 'missing';
+          } else if (!isMatch) {
+            differenceType = 'mismatch';
+          }
+          
+          // 随机生成服务时长（30-180分钟）
+          const baseDuration = Math.floor(Math.random() * 150) + 30;
+          
+          // 机构数据
+          const orgDuration = baseDuration;
+          // 按半小时计价，不足半小时不计价
+          const orgBillableDuration = Math.floor(baseDuration / 30) * 30;
+          // 单价30元/半小时
+          const orgAmount = (orgBillableDuration / 30) * 30;
+          
+          // 医保数据（可能有差异）
+          let medicalDuration = orgDuration;
+          let medicalAmount = orgAmount;
+          
+          if (differenceType === 'mismatch') {
+            // 医保数据有差异
+            medicalDuration = orgDuration + (Math.random() > 0.5 ? 30 : -30);
+            medicalAmount = (Math.floor(medicalDuration / 30) * 30 / 30) * 30;
+          } else if (differenceType === 'missing') {
+            // 医保数据缺失
+            medicalDuration = null;
+            medicalAmount = null;
+          }
+          
+          // 随机日期（当月）
+          const date = new Date(2025, 9, Math.floor(Math.random() * 30) + 1);
+          const serviceDate = date.toISOString().split('T')[0];
+          
+          reconciliationData.push({
+            id: `rec_${i}`,
+            name: `测试用户${i}`,
+            idCard: `3306021990${String(i).padStart(4, '0')}${String(i * 123).slice(-4)}`,
+            serviceDate: serviceDate,
+            orgDuration: orgDuration,
+            orgBillableDuration: orgBillableDuration,
+            orgAmount: orgAmount,
+            medicalDuration: medicalDuration,
+            medicalAmount: medicalAmount,
+            differenceType: differenceType,
+            adjustReason: '',
+            isAdjusted: false
+          });
+        }
+      }
+
+      // 模拟数据比对
+      function mockDataComparison() {
+        reconciliationData.forEach(item => {
+          if (item.differenceType !== 'missing') {
+            // 随机调整医保数据，制造差异
+            if (Math.random() > 0.7) {
+              item.medicalDuration = item.orgDuration + (Math.random() > 0.5 ? 30 : -30);
+              item.medicalAmount = (Math.floor(item.medicalDuration / 30) * 30 / 30) * 30;
+              
+              if (item.orgAmount !== item.medicalAmount) {
+                item.differenceType = 'mismatch';
+              }
+            }
+          }
+        });
+      }
+
+      // 渲染结果表格
+      function renderResultTable() {
+        const tableBody = $('#resultTableBody');
+        tableBody.empty();
+        
+        // 应用筛选
+        const filteredData = filterResultTable(true);
+        
+        // 更新总数
+        $('#totalResultCount').text(filteredData.length);
+        
+        if (filteredData.length === 0) {
+          tableBody.append(`
+            <tr>
+              <td colspan="8" class="text-center text-muted">没有找到符合条件的数据</td>
+            </tr>
+          `);
+        } else {
+          filteredData.forEach((item, index) => {
+            let rowClass = '';
+            let diffBadge = '';
+            
+            switch (item.differenceType) {
+              case 'match':
+                rowClass = 'data-match';
+                diffBadge = '<span class="badge-match">数据一致</span>';
+                break;
+              case 'mismatch':
+                rowClass = 'data-mismatch';
+                diffBadge = '<span class="badge-mismatch">费用差异</span>';
+                break;
+              case 'missing':
+                rowClass = 'data-missing';
+                diffBadge = '<span class="badge-missing">缺失数据</span>';
+                break;
+            }
+            
+            // 调整标记
+            const adjustMark = item.isAdjusted ? '<span class="badge bg-primary">已调整</span>' : '';
+            
+            tableBody.append(`
+              <tr class="${rowClass}">
+                <td>
+                  <input type="checkbox" name="resultItem" value="${item.id}" 
+                    data-diff="${item.differenceType}" ${selectedRecords.includes(item.id) ? 'checked' : ''}>
+                </td>
+                <td>${index + 1}</td>
+                <td>
+                  <div>${item.name}</div>
+                  <div style="font-size: 12px; color: #666;">${item.idCard}</div>
+                </td>
+                <td>${item.serviceDate}</td>
+                <td>
+                  <div>服务时长：${item.orgDuration}分钟</div>
+                  <div>计费时长：${item.orgBillableDuration}分钟</div>
+                  <div>费用：¥${item.orgAmount.toFixed(2)}</div>
+                  ${item.adjustReason ? `<div style="font-size: 12px; color: #999;">调整原因：${item.adjustReason}</div>` : ''}
+                </td>
+                <td>
+                  ${item.medicalDuration !== null ? 
+                    `<div>服务时长：${item.medicalDuration}分钟</div>
+                     <div>费用：¥${item.medicalAmount.toFixed(2)}</div>` : 
+                    '<div class="text-danger">数据缺失</div>'}
+                </td>
+                <td>${diffBadge} ${adjustMark}</td>
+                <td>
+                  ${item.differenceType !== 'match' ? 
+                    `<button class="btn btn-sm btn-primary edit-btn" data-id="${item.id}">
+                      <i class="fa fa-edit"></i> 修改
+                    </button>` : 
+                    '-'
+                  }
+                </td>
+              </tr>
+            `);
+          });
+        }
+      }
+
+      // 筛选结果表格
+      function filterResultTable(internalCall = false) {
+        const diffType = $('#differenceType').val();
+        const searchText = $('#searchInput').val().toLowerCase();
+        
+        let filteredData = [...reconciliationData];
+        
+        // 按差异类型筛选
+        if (diffType !== 'all') {
+          filteredData = filteredData.filter(item => item.differenceType === diffType);
+        }
+        
+        // 按搜索文本筛选
+        if (searchText) {
+          filteredData = filteredData.filter(item => 
+            item.name.toLowerCase().includes(searchText) || 
+            item.idCard.includes(searchText)
+          );
+        }
+        
+        // 如果是内部调用（用于渲染），返回筛选后的数据
+        if (internalCall) {
+          return filteredData;
+        }
+        
+        // 否则，重新渲染表格
+        renderResultTable();
+      }
+
+      // 更新状态显示
+      function updateStatus() {
+        // 更新状态点
+        if (reconciliationData.length > 0) {
+          $('.status-item:eq(0) .status-dot').removeClass('pending').addClass('success');
+          $('.status-item:eq(0) span:eq(1)').text('对账单生成：已生成');
+        }
+        
+        // 检查是否有医保数据
+        const hasMedicalData = reconciliationData.some(item => item.medicalDuration !== null);
+        if (hasMedicalData) {
+          $('.status-item:eq(1) .status-dot').removeClass('pending').addClass('success');
+          $('.status-item:eq(1) span:eq(1)').text('医保数据导入：已导入');
+          
+          $('.status-item:eq(2) .status-dot').removeClass('pending').addClass('success');
+          $('.status-item:eq(2) span:eq(1)').text('数据比对：已比对');
+          
+          // 检查是否有差异
+          const hasDifferences = reconciliationData.some(item => item.differenceType !== 'match');
+          if (!hasDifferences) {
+            $('.status-item:eq(3) .status-dot').removeClass('pending').addClass('success');
+            $('.status-item:eq(3) span:eq(1)').text('差异处理：已处理');
+          } else {
+            const hasAdjusted = reconciliationData.some(item => item.isAdjusted);
+            if (hasAdjusted) {
+              $('.status-item:eq(3) .status-dot').removeClass('pending').addClass('warning');
+              $('.status-item:eq(3) span:eq(1)').text('差异处理：部分处理');
+            }
+          }
+        }
+      }
+
+      // 显示提示信息
+      function showPrompt(title, msg) {
+        $('#promptTitle').text(title);
+        $('#promptMsg').html(msg);
+        promptModal.show();
+      }
+    });
+  </script>
+</body>
+</html>

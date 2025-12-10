@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关键数据配置 - 居家长护业务管理系统</title>
+  <!-- 引入外部资源 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <style>
+    /* 继承全局样式 */
+    body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+    .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+    .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; }
+    .card-body { padding: 20px; }
+    /* 布局样式 */
+    .app-container { display: flex; min-height: 100vh; }
+    /* 侧边导航 */
+    .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+    .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+    .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+    .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+    .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+    /* 主内容区 */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+    /* 顶部导航 */
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+    /* 业务规则配置专属样式 */
+    .config-section { margin-bottom: 30px; }
+    .config-item { margin-bottom: 15px; }
+    .config-label { font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; }
+    .config-hint { color: #999; font-size: 12px; margin-top: 5px; }
+    .help-icon { color: #1890FF; cursor: pointer; margin-left: 8px; font-size: 14px; }
+    .form-switch { padding-left: 2.5rem; }
+    .save-btn-area { margin-top: 40px; text-align: center; }
+    /* 配置项样式优化 */
+    .form-label { color: #333; margin-bottom: 8px; }
+    .form-select:disabled, .form-control:disabled { background-color: #f5f5f5; cursor: not-allowed; opacity: 0.7; }
+    .input-group-text { background-color: #f8f9fa; color: #666; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+    .card-header h5 { margin: 0; }
+    .card-header small { margin-top: 5px; width: 100%; }
+    /* 配置项分组视觉优化 */
+    .config-group { border-left: 3px solid #1890FF; padding-left: 15px; margin-bottom: 20px; }
+    /* 响应式优化 */
+    @media (max-width: 768px) {
+      .col-md-6 { margin-bottom: 15px; }
+      .card-header { flex-direction: column; align-items: flex-start; }
+      .card-header small { margin-top: 8px; }
+    }
+    /* 输入框焦点效果 */
+    .form-control:focus, .form-select:focus { border-color: #1890FF; box-shadow: 0 0 0 0.2rem rgba(24, 144, 255, 0.25); }
+    /* 按钮样式优化 */
+    .btn-lg { padding: 12px 30px; font-size: 16px; }
+    /* 输入验证错误样式 */
+    .form-control.is-invalid { border-color: #dc3545; }
+    .form-control.is-invalid:focus { border-color: #dc3545; box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+          <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+          <h3>管理员工作平台</h3>
+      </div>
+      
+      <!-- 导航分组：系统配置 -->
+      <div class="nav-group-title">系统配置</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="机构信息配置.html" class="nav-link">
+                  <i class="fa fa-building-o"></i>
+                  <span>机构信息配置</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="套餐管理.html" class="nav-link">
+                  <i class="fa fa-cog"></i>
+                  <span>套餐管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="行政区划.html" class="nav-link">
+                  <i class="fa fa-book"></i>
+                  <span>行政区域管理</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：用户管理 -->
+      <div class="nav-group-title">用户管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="角色配置.html" class="nav-link">
+                  <i class="fa fa-user-secret"></i>
+                  <span>角色权限配置</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：日志管理 -->
+      <div class="nav-group-title">数据管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="服务线索批量导入.html" class="nav-link">
+                  <i class="fa fa-upload"></i>
+                  <span>服务对象数据批量导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="服务对象数据维护.html" class="nav-link">
+                  <i class="fa fa-edit"></i>
+                  <span>服务对象数据维护</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保工单导入.html" class="nav-link">
+                  <i class="fa fa-file-excel-o"></i>
+                  <span>医保平台工单导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保平台新增服务对象数据.html" class="nav-link">
+                  <i class="fa fa-download"></i>
+                  <span>医保平台新增服务对象数据导出</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保对账数据管理.html" class="nav-link">
+                  <i class="fa fa-calculator"></i>
+                  <span>医保对账数据管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="关键数据配置.html" class="nav-link active">
+                  <i class="fa fa-wrench"></i>
+                  <span>其他数据维护</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 顶部导航 -->
+      <div class="top-nav">
+        <h1 class="page-title">
+          <i class="fa fa-cog"></i> 关键数据配置
+        </h1>
+      </div>
+
+      <!-- 选项式配置卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fa fa-list-ul"></i> 机构业务配置（选项式）
+          </h5>
+          <small class="text-muted">只能修改选项值，不允许添加和删除配置项</small>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- 配置项1: 暂停服务审批人 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                暂停服务审批人
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置暂停服务操作的审批人角色"></i>
+              </label>
+              <select class="form-select" id="config_1" data-config-id="1">
+                <option value="1">机构负责人</option>
+                <option value="2">服务主管</option>
+              </select>
+            </div>
+
+            <!-- 配置项2: 暂停/恢复服务发起人 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                暂停/恢复服务发起人
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置暂停或恢复服务操作的发起人角色"></i>
+              </label>
+              <select class="form-select" id="config_2" data-config-id="2">
+                <option value="1">护理员</option>
+                <option value="2">服务主管</option>
+              </select>
+            </div>
+
+            <!-- 配置项3: 死亡通知发起人 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                死亡通知发起人
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置死亡通知操作的发起人角色"></i>
+              </label>
+              <select class="form-select" id="config_3" data-config-id="3">
+                <option value="1">护理员</option>
+                <option value="2">服务主管</option>
+              </select>
+            </div>
+
+            <!-- 配置项4: 转出通知发起人 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                转出通知发起人
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置转出通知操作的发起人角色"></i>
+              </label>
+              <select class="form-select" id="config_4" data-config-id="4">
+                <option value="1">护理员</option>
+                <option value="2">服务主管</option>
+              </select>
+            </div>
+
+            <!-- 配置项5: 派单项目的合法性 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                派单项目的合法性
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置派单时是否检查项目合法性（由数据库自动处理）"></i>
+              </label>
+              <select class="form-select" id="config_5" data-config-id="5" disabled>
+                <option value="1">排单时检查</option>
+                <option value="2">排单时不检查</option>
+              </select>
+              <small class="text-muted d-block mt-1">
+                <i class="fa fa-info-circle"></i> 此配置由数据库自动处理，后端无需处理
+              </small>
+            </div>
+
+            <!-- 配置项6: 档案管理员确认服务记录最晚日期 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                档案管理员确认服务记录最晚日期
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置档案管理员确认服务记录的最晚日期（由数据库自动处理）"></i>
+              </label>
+              <select class="form-select" id="config_6" data-config-id="6" disabled>
+                <option value="1">每月5日</option>
+                <option value="2">每月10日</option>
+                <option value="3">每月15日</option>
+                <option value="4">每月31日(不限制)</option>
+              </select>
+              <small class="text-muted d-block mt-1">
+                <i class="fa fa-info-circle"></i> 此配置由数据库自动处理，后端无需处理
+              </small>
+            </div>
+
+            <!-- 配置项7: 新服务对象开始服务日期 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                新服务对象开始服务日期
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="设置新服务对象开始服务的日期规则（由数据库自动处理）"></i>
+              </label>
+              <select class="form-select" id="config_7" data-config-id="7" disabled>
+                <option value="1">公示次月1日</option>
+                <option value="2">签约日</option>
+              </select>
+              <small class="text-muted d-block mt-1">
+                <i class="fa fa-info-circle"></i> 此配置由数据库自动处理，后端无需处理
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 数值配置卡片 -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">
+            <i class="fa fa-calculator"></i> 机构业务配置（数值型）
+          </h5>
+          <small class="text-muted">只能修改数值，不允许添加和删除配置项</small>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <!-- 配置值1: 医保结算工时单价 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                医保结算工时单价
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="医保结算时每个工时的单价"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_1" data-value-id="1" value="60" step="0.01" min="0">
+                <span class="input-group-text">元/工时</span>
+              </div>
+            </div>
+
+            <!-- 配置值2: 护理员结算工时单价 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                护理员结算工时单价
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="护理员结算时每个工时的单价"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_2" data-value-id="2" value="30" step="0.01" min="0">
+                <span class="input-group-text">元/工时</span>
+              </div>
+            </div>
+
+            <!-- 配置值3: 最短工时(分钟) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                最短工时
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="服务的最短工时限制"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_3" data-value-id="3" value="60" step="1" min="1">
+                <span class="input-group-text">分钟</span>
+              </div>
+            </div>
+
+            <!-- 配置值4: 工时单位(分钟) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                工时单位
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="工时的基本计算单位"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_4" data-value-id="4" value="30" step="1" min="1">
+                <span class="input-group-text">分钟</span>
+              </div>
+            </div>
+
+            <!-- 配置值5: 最长工时(分钟) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                最长工时
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="服务的最长工时限制"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_5" data-value-id="5" value="120" step="1" min="1">
+                <span class="input-group-text">分钟</span>
+              </div>
+            </div>
+
+            <!-- 配置值6: 工单签入时间允许最大误差(分钟) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                工单签入时间允许最大误差
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="工单签入时间与实际时间的最大允许误差"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_6" data-value-id="6" value="30" step="1" min="0">
+                <span class="input-group-text">分钟</span>
+              </div>
+            </div>
+
+            <!-- 配置值7: 医保结算保留比例(%) -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                医保结算保留比例
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="医保结算时保留的比例"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_7" data-value-id="7" value="5" step="0.1" min="0" max="100">
+                <span class="input-group-text">%</span>
+              </div>
+            </div>
+
+            <!-- 配置值8: 每周最少服务次数 -->
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">
+                每周最少服务次数
+                <i class="fa fa-question-circle text-primary ms-1" 
+                   data-bs-toggle="tooltip" 
+                   title="每个服务对象每周最少需要服务的次数"></i>
+              </label>
+              <div class="input-group">
+                <input type="number" class="form-control" id="value_8" data-value-id="8" value="2" step="1" min="1">
+                <span class="input-group-text">次/周</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 保存按钮 -->
+      <div class="text-center mt-4 mb-4">
+        <button id="saveConfigBtn" class="btn btn-primary btn-lg px-5">
+          <i class="fa fa-save"></i> 保存所有配置
+        </button>
+        <button id="resetConfigBtn" class="btn btn-outline-secondary btn-lg px-5 ms-3">
+          <i class="fa fa-refresh"></i> 重置为默认值
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 保存成功弹窗 -->
+  <div class="modal fade" id="saveSuccessModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="fa fa-check-circle text-success" style="font-size: 48px; margin-bottom: 15px;"></i>
+          <h5 class="modal-title">配置已生效</h5>
+          <p class="text-muted">您的业务规则配置已保存并实时生效</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 配置数据存储
+    var configData = {
+      options: {},  // 选项式配置 (sys_config)
+      values: {}    // 数值型配置 (sys_config_value)
+    };
+
+    // 默认配置数据（用于重置）
+    var defaultConfig = {
+      options: {
+        1: 1,  // 暂停服务审批人: 机构负责人
+        2: 1,  // 暂停/恢复服务发起人: 护理员
+        3: 1,  // 死亡通知发起人: 护理员
+        4: 1,  // 转出通知发起人: 护理员
+        5: 1,  // 派单项目的合法性: 排单时检查
+        6: 1,  // 档案管理员确认服务记录最晚日期: 每月5日
+        7: 1   // 新服务对象开始服务日期: 公示次月1日
+      },
+      values: {
+        1: 60,   // 医保结算工时单价
+        2: 30,   // 护理员结算工时单价
+        3: 60,   // 最短工时(分钟)
+        4: 30,   // 工时单位(分钟)
+        5: 120,  // 最长工时(分钟)
+        6: 30,   // 工单签入时间允许最大误差(分钟)
+        7: 5,    // 医保结算保留比例(%)
+        8: 2     // 每周最少服务次数
+      }
+    };
+
+    // 页面加载完成后初始化
+    $(function() {
+      // 初始化Tooltip
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+
+      // 加载配置数据
+      loadConfigData();
+
+      // 数值输入框实时验证
+      $('input[id^="value_"]').on('blur', function() {
+        var $input = $(this);
+        var value = parseFloat($input.val());
+        var valueId = $input.data('value-id');
+        
+        if (isNaN(value) || value < 0) {
+          $input.addClass('is-invalid');
+          return;
+        }
+        
+        // 百分比验证
+        if (valueId == 7 && value > 100) {
+          $input.addClass('is-invalid');
+          return;
+        }
+        
+        $input.removeClass('is-invalid');
+      });
+
+      // 输入框输入时清除错误状态
+      $('input[id^="value_"]').on('input', function() {
+        $(this).removeClass('is-invalid');
+      });
+
+      // 保存配置按钮点击事件
+      $('#saveConfigBtn').click(function() {
+        saveConfigData();
+      });
+
+      // 重置配置按钮点击事件
+      $('#resetConfigBtn').click(function() {
+        if (confirm('确定要重置所有配置为默认值吗？此操作将丢失所有未保存的修改！')) {
+          resetConfigData();
+        }
+      });
+    });
+
+    // 加载配置数据
+    function loadConfigData() {
+      // TODO: 从后端API加载数据
+      // 示例：使用默认数据
+      configData.options = JSON.parse(JSON.stringify(defaultConfig.options));
+      configData.values = JSON.parse(JSON.stringify(defaultConfig.values));
+
+      // 填充选项式配置
+      for (var id in configData.options) {
+        $('#config_' + id).val(configData.options[id]);
+      }
+
+      // 填充数值型配置
+      for (var id in configData.values) {
+        $('#value_' + id).val(configData.values[id]);
+      }
+
+      // 实际项目中应该这样调用：
+      /*
+      $.ajax({
+        url: '/api/sys-config/load',
+        method: 'GET',
+        success: function(response) {
+          if (response.success) {
+            configData.options = response.data.options;
+            configData.values = response.data.values;
+            // 填充表单...
+          }
+        }
+      });
+      */
+    }
+
+    // 保存配置数据
+    function saveConfigData() {
+      // 收集选项式配置
+      var optionsToSave = {};
+      var hasChanges = false;
+      
+      $('select[id^="config_"]').each(function() {
+        var configId = $(this).data('config-id');
+        if (configId && !$(this).prop('disabled')) {
+          var newValue = parseInt($(this).val());
+          var oldValue = configData.options[configId];
+          if (newValue !== oldValue) {
+            optionsToSave[configId] = newValue;
+            hasChanges = true;
+          }
+        }
+      });
+
+      // 收集数值型配置
+      var valuesToSave = {};
+      $('input[id^="value_"]').each(function() {
+        var valueId = $(this).data('value-id');
+        if (valueId) {
+          var value = parseFloat($(this).val());
+          var label = $(this).closest('.col-md-6').find('label').text().trim().replace(/\s*\(.*?\)\s*/g, '');
+          
+          // 验证数值
+          if (isNaN(value) || value < 0) {
+            alert('配置项 "' + label + '" 的值无效！请输入大于等于0的数值。');
+            $(this).focus();
+            return false;
+          }
+          
+          // 特殊验证：百分比不能超过100
+          if (valueId == 7 && value > 100) {
+            alert('配置项 "' + label + '" 的值不能超过100%！');
+            $(this).focus();
+            return false;
+          }
+          
+          var oldValue = configData.values[valueId];
+          if (Math.abs(value - oldValue) > 0.001) { // 浮点数比较
+            valuesToSave[valueId] = value;
+            hasChanges = true;
+          }
+        }
+      });
+
+      // 检查是否有修改
+      if (!hasChanges) {
+        alert('没有检测到任何修改，无需保存！');
+        return;
+      }
+
+      // 验证数据
+      if (Object.keys(optionsToSave).length === 0 && Object.keys(valuesToSave).length === 0) {
+        alert('没有可保存的配置项！');
+        return;
+      }
+
+      // 显示保存中状态
+      var $saveBtn = $('#saveConfigBtn');
+      var originalText = $saveBtn.html();
+      $saveBtn.prop('disabled', true).html('<i class="fa fa-spinner fa-spin"></i> 保存中...');
+
+      // TODO: 发送到后端API
+      console.log('保存选项式配置:', optionsToSave);
+      console.log('保存数值型配置:', valuesToSave);
+
+      // 模拟API调用
+      setTimeout(function() {
+        // 实际项目中应该这样调用：
+        /*
+        $.ajax({
+          url: '/api/sys-config/save',
+          method: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({
+            options: optionsToSave,
+            values: valuesToSave
+          }),
+          success: function(response) {
+            if (response.success) {
+              showSuccessModal();
+              configData.options = Object.assign(configData.options, optionsToSave);
+              configData.values = Object.assign(configData.values, valuesToSave);
+            } else {
+              alert('保存失败：' + response.message);
+            }
+          },
+          error: function() {
+            alert('保存失败，请稍后重试！');
+          },
+          complete: function() {
+            $saveBtn.prop('disabled', false).html(originalText);
+          }
+        });
+        */
+
+        // 模拟成功
+        showSuccessModal();
+        configData.options = Object.assign(configData.options, optionsToSave);
+        configData.values = Object.assign(configData.values, valuesToSave);
+        $saveBtn.prop('disabled', false).html(originalText);
+      }, 500);
+    }
+
+    // 重置配置数据
+    function resetConfigData() {
+      // 重置选项式配置
+      for (var id in defaultConfig.options) {
+        $('#config_' + id).val(defaultConfig.options[id]);
+      }
+
+      // 重置数值型配置
+      for (var id in defaultConfig.values) {
+        $('#value_' + id).val(defaultConfig.values[id]);
+      }
+
+      // 更新内存中的数据
+      configData.options = JSON.parse(JSON.stringify(defaultConfig.options));
+      configData.values = JSON.parse(JSON.stringify(defaultConfig.values));
+
+      // 提示
+      alert('配置已重置为默认值！');
+    }
+
+    // 显示成功弹窗
+    function showSuccessModal() {
+      var successModal = new bootstrap.Modal(document.getElementById('saveSuccessModal'));
+      successModal.show();
+    }
+  </script>
+</body>
+</html>

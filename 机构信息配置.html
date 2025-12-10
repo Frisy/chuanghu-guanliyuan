@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>机构信息配置 - 居家长护业务管理系统</title>
+    <!-- 引入外部资源 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        /* 继承全局样式 */
+        body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+        .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+        .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+        .btn-outline-secondary { border-color: #ddd; color: #666; }
+        .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; }
+        .card-body { padding: 20px; }
+        /* 布局样式 */
+        .app-container { display: flex; min-height: 100vh; }
+        /* 侧边导航 */
+        .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+        .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+        .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+        .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+        .nav-menu { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+        .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+        .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+        /* 主内容区 */
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+        /* 顶部导航 */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+        .user-info { display: flex; align-items: center; }
+        .notification { position: relative; margin-right: 20px; cursor: pointer; }
+        .notification i { font-size: 20px; color: #666; }
+        .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+        .user-name { font-size: 14px; font-weight: 500; }
+        /* 表单样式 */
+        .form-group { margin-bottom: 20px; }
+        .form-label { font-weight: 500; margin-bottom: 8px; display: block; font-size: 14px; }
+        .form-control { border-radius: 8px; border: 1px solid #ddd; padding: 10px 12px; font-size: 14px; transition: border-color 0.3s; }
+        .form-control:focus { border-color: #1890FF; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1); outline: none; }
+        .form-text { color: #666; font-size: 12px; margin-top: 5px; line-height: 1.4; }
+        .textarea-height { height: 100px; resize: none; }
+        /* 按钮区域 */
+        .btn-area { display: flex; justify-content: center; gap: 15px; margin-top: 30px; }
+        .btn { padding: 8px 20px; border-radius: 6px; font-size: 14px; font-weight: 500; }
+        /* 预览弹窗样式 */
+        .preview-card { border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fff; }
+        .preview-card h5 { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: #333; }
+        .preview-content { font-size: 14px; line-height: 1.6; color: #555; }
+        .preview-content span { color: #1890FF; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边导航（管理员专属） -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+                <h3>管理员工作平台</h3>
+            </div>
+            
+            <!-- 导航分组：系统配置 -->
+            <div class="nav-group-title">系统配置</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="机构信息配置.html" class="nav-link active">
+                        <i class="fa fa-building-o"></i>
+                        <span>机构信息配置</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="套餐管理.html" class="nav-link">
+                        <i class="fa fa-cog"></i>
+                        <span>套餐管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="行政区划.html" class="nav-link">
+                        <i class="fa fa-book"></i>
+                        <span>行政区域管理</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- 导航分组：用户管理 -->
+            <div class="nav-group-title">用户管理</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="角色配置.html" class="nav-link">
+                        <i class="fa fa-user-secret"></i>
+                        <span>角色权限配置</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- 导航分组：日志管理 -->
+            <div class="nav-group-title">数据管理</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="服务线索批量导入.html" class="nav-link">
+                        <i class="fa fa-upload"></i>
+                        <span>服务对象数据批量导入</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="服务对象数据维护.html" class="nav-link">
+                        <i class="fa fa-edit"></i>
+                        <span>服务对象数据维护</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保工单导入.html" class="nav-link">
+                        <i class="fa fa-file-excel-o"></i>
+                        <span>医保平台工单导入</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保平台新增服务对象数据.html" class="nav-link">
+                        <i class="fa fa-download"></i>
+                        <span>医保平台新增服务对象数据导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保对账数据管理.html" class="nav-link">
+                        <i class="fa fa-calculator"></i>
+                        <span>医保对账数据管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="关键数据配置.html" class="nav-link">
+                        <i class="fa fa-wrench"></i>
+                        <span>其他数据维护</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <h1 class="page-title">机构信息配置</h1>
+                <div class="user-info">
+                    <div class="notification">
+                        <i class="fa fa-bell-o"></i>
+                        <span class="notification-badge">2</span>
+                    </div>
+                    <div class="user-avatar">管</div>
+                    <span class="user-name">系统管理员</span>
+                </div>
+            </div>
+
+            <!-- 机构信息配置表单 -->
+            <div class="card">
+                <div class="card-body">
+                    <form id="orgForm">
+                        <!-- 基础信息模块 -->
+                        <div class="card mb-4">
+                            <div class="card-header">基础信息</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgName">企业名称 <span style="color: #FF4D4F;">*</span></label>
+                                            <input type="text" class="form-control" id="orgName" placeholder="请输入企业名称" value="XX市居家养老服务有限公司">
+                                            <div class="form-text">填写说明：需与医保备案名称一致，将展示在服务协议、评估结论书中</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgLegalPerson">法人姓名 <span style="color: #FF4D4F;">*</span></label>
+                                            <input type="text" class="form-control" id="orgLegalPerson" placeholder="请输入法人姓名" value="张三">
+                                            <div class="form-text">填写说明：企业法定代表人姓名，用于系统备案</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgAddress">企业地址 <span style="color: #FF4D4F;">*</span></label>
+                                            <textarea class="form-control textarea-height" id="orgAddress" placeholder="请输入企业详细地址">XX市XX区XX街道XX路123号XX大厦5层</textarea>
+                                            <div class="form-text">填写说明：无需关联行政区域，直接填写完整地址（包括省市区街道门牌号）</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 联系信息模块 -->
+                        <div class="card">
+                            <div class="card-header">联系与银行信息</div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgPhone">联系电话 <span style="color: #FF4D4F;">*</span></label>
+                                            <input type="tel" class="form-control" id="orgPhone" placeholder="请输入联系电话" value="020-12345678">
+                                            <div class="form-text">填写说明：企业对外联系电话，将展示在服务协议中</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgBankName">开户行名称</label>
+                                            <input type="text" class="form-control" id="orgBankName" placeholder="请输入开户行名称" value="中国建设银行XX支行">
+                                            <div class="form-text">填写说明：企业对公账户开户行全称</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgBankCode">联行号</label>
+                                            <input type="text" class="form-control" id="orgBankCode" placeholder="请输入联行号" value="105581000012">
+                                            <div class="form-text">填写说明：开户行联行号（12位数字），用于银行转账识别</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgAccountName">账户名称</label>
+                                            <input type="text" class="form-control" id="orgAccountName" placeholder="请输入账户名称" value="XX市居家养老服务有限公司">
+                                            <div class="form-text">填写说明：需与企业名称一致，对公账户名称</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="form-group">
+                                            <label class="form-label" for="orgAccountNo">账号</label>
+                                            <input type="text" class="form-control" id="orgAccountNo" placeholder="请输入银行账号" value="6222000012345678901">
+                                            <div class="form-text">填写说明：企业对公银行账号</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 按钮区域 -->
+                        <div class="btn-area">
+                            <button type="button" class="btn btn-outline-secondary" id="previewBtn"><i class="fa fa-eye"></i> 预览</button>
+                            <button type="button" class="btn btn-primary" id="saveBtn"><i class="fa fa-save"></i> 保存</button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetBtn"><i class="fa fa-refresh"></i> 取消</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">机构信息预览</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- 服务协议场景预览 -->
+                    <div class="preview-card">
+                        <h5>场景1：服务协议中的机构信息展示</h5>
+                        <div class="preview-content">
+                            <p>甲方（服务机构）：<span id="previewOrgName">XX市居家养老服务有限公司</span></p>
+                            <p>地址：<span id="previewOrgAddress">XX市XX区XX街道XX路123号XX大厦5层</span></p>
+                            <p>联系电话：<span id="previewOrgPhone">020-12345678</span></p>
+                            <p>法定代表人：<span id="previewOrgLegalPerson">张三</span></p>
+                        </div>
+                    </div>
+
+                    <!-- 评估结论书场景预览 -->
+                    <div class="preview-card">
+                        <h5>场景2：评估结论书中的机构信息展示</h5>
+                        <div class="preview-content">
+                            <p>评估机构：<span id="previewOrgName2">XX市居家养老服务有限公司</span></p>
+                            <p>机构地址：<span id="previewOrgAddress2">XX市XX区XX街道XX路123号XX大厦5层</span></p>
+                            <p>联系电话：<span id="previewOrgPhone2">020-12345678</span></p>
+                            <p>评估结论：经评估，服务对象符合XX市居家养老服务条件，由<span id="previewOrgName3">XX市居家养老服务有限公司</span>提供专业护理服务。</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">关闭预览</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        $(function() {
+            // 初始化表单原始数据（用于取消重置）
+            const originalFormData = {
+                orgName: $('#orgName').val(),
+                orgAddress: $('#orgAddress').val(),
+                orgLegalPerson: $('#orgLegalPerson').val(),
+                orgPhone: $('#orgPhone').val(),
+                orgBankName: $('#orgBankName').val(),
+                orgBankCode: $('#orgBankCode').val(),
+                orgAccountName: $('#orgAccountName').val(),
+                orgAccountNo: $('#orgAccountNo').val()
+            };
+
+            // 预览按钮点击事件
+            $('#previewBtn').click(function() {
+                // 校验必填项
+                if (!validateRequiredFields()) {
+                    return;
+                }
+
+                // 获取当前表单数据
+                const formData = getFormData();
+
+                // 更新预览弹窗内容
+                $('#previewOrgName').text(formData.orgName);
+                $('#previewOrgAddress').text(formData.orgAddress);
+                $('#previewOrgPhone').text(formData.orgPhone);
+                $('#previewOrgLegalPerson').text(formData.orgLegalPerson);
+
+                $('#previewOrgName2').text(formData.orgName);
+                $('#previewOrgAddress2').text(formData.orgAddress);
+                $('#previewOrgPhone2').text(formData.orgPhone);
+                $('#previewOrgName3').text(formData.orgName);
+
+                // 显示预览弹窗
+                $('#previewModal').modal('show');
+            });
+
+            // 保存按钮点击事件
+            $('#saveBtn').click(function() {
+                // 校验必填项
+                if (!validateRequiredFields()) {
+                    return;
+                }
+
+                // 获取表单数据
+                const formData = getFormData();
+
+                // 模拟保存请求（实际项目中替换为AJAX请求）
+                $.ajax({
+                    url: '/api/admin/org/config/save',
+                    type: 'POST',
+                    data: JSON.stringify(formData),
+                    contentType: 'application/json',
+                    success: function(res) {
+                        if (res.code === 200) {
+                            alert('机构信息保存成功！已同步至所有关联模块（服务协议、评估结论书等）');
+                        } else {
+                            alert('保存失败：' + res.message);
+                        }
+                    },
+                    error: function() {
+                        alert('保存失败，请检查网络连接');
+                    }
+                });
+            });
+
+            // 取消按钮点击事件（重置表单）
+            $('#resetBtn').click(function() {
+                $('#orgName').val(originalFormData.orgName);
+                $('#orgAddress').val(originalFormData.orgAddress);
+                $('#orgLegalPerson').val(originalFormData.orgLegalPerson);
+                $('#orgPhone').val(originalFormData.orgPhone);
+                $('#orgBankName').val(originalFormData.orgBankName);
+                $('#orgBankCode').val(originalFormData.orgBankCode);
+                $('#orgAccountName').val(originalFormData.orgAccountName);
+                $('#orgAccountNo').val(originalFormData.orgAccountNo);
+            });
+
+            // 辅助函数：获取表单数据
+            function getFormData() {
+                return {
+                    orgName: $('#orgName').val().trim(),
+                    orgAddress: $('#orgAddress').val().trim(),
+                    orgLegalPerson: $('#orgLegalPerson').val().trim(),
+                    orgPhone: $('#orgPhone').val().trim(),
+                    orgBankName: $('#orgBankName').val().trim(),
+                    orgBankCode: $('#orgBankCode').val().trim(),
+                    orgAccountName: $('#orgAccountName').val().trim(),
+                    orgAccountNo: $('#orgAccountNo').val().trim()
+                };
+            }
+
+            // 辅助函数：校验必填项
+            function validateRequiredFields() {
+                const formData = getFormData();
+                let isValid = true;
+                let errorMsg = '';
+
+                if (!formData.orgName) {
+                    errorMsg += '企业名称不能为空\n';
+                    isValid = false;
+                }
+                if (!formData.orgAddress) {
+                    errorMsg += '企业地址不能为空\n';
+                    isValid = false;
+                }
+                if (!formData.orgLegalPerson) {
+                    errorMsg += '法人姓名不能为空\n';
+                    isValid = false;
+                }
+                if (!formData.orgPhone) {
+                    errorMsg += '联系电话不能为空\n';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    alert(errorMsg);
+                }
+
+                return isValid;
+            }
+        });
+    </script>
+</body>
+</html>

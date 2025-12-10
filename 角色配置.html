@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理 - 居家长护业务管理系统</title>
+    <!-- 引入外部资源 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+    <style>
+        /* 继承全局样式 */
+        body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+        .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+        .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+        .btn-outline-secondary { border-color: #ddd; color: #666; }
+        .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+        .btn-danger { background-color: #FF4D4F; border-color: #FF4D4F; }
+        .btn-danger:hover { background-color: #F5222D; border-color: #F5222D; }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .card-body { padding: 20px; }
+        /* 布局样式 */
+        .app-container { display: flex; min-height: 100vh; }
+        /* 侧边导航 */
+        .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+        .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+        .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+        .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+        .nav-menu { list-style: none; padding: 0; margin: 0; }
+        .nav-item { margin-bottom: 4px; }
+        .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+        .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+        .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+        /* 主内容区 */
+        .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+        /* 顶部导航 */
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+        .user-info { display: flex; align-items: center; }
+        .notification { position: relative; margin-right: 20px; cursor: pointer; }
+        .notification i { font-size: 20px; color: #666; }
+        .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+        .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+        .user-name { font-size: 14px; font-weight: 500; }
+        /* 筛选区样式 */
+        .filter-bar { background: #fff; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+        .filter-item { flex: 1; min-width: 150px; }
+        .filter-label { font-size: 13px; font-weight: 500; margin-bottom: 8px; display: block; }
+        .form-control { border-radius: 8px; border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; }
+        .form-select { border-radius: 8px; border: 1px solid #ddd; padding: 8px 12px; font-size: 13px; }
+        .filter-actions { display: flex; gap: 10px; align-items: flex-end; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 6px; }
+        /* 列表样式 */
+        .user-table th { font-size: 13px; font-weight: 600; color: #666; text-align: center; vertical-align: middle; }
+        .user-table td { font-size: 13px; vertical-align: middle; text-align: center; }
+        .user-table .text-left { text-align: left; }
+        .role-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; background-color: #e8f4f8; color: #1890FF; margin-right: 5px; }
+        .status-active { color: #52C41A; }
+        .status-locked { color: #FF4D4F; }
+        /* 分页样式 */
+        .pagination-container { display: flex; justify-content: flex-end; margin-top: 20px; }
+        .pagination { margin: 0; }
+        .page-item.active .page-link { background-color: #1890FF; border-color: #1890FF; }
+        .page-link { color: #666; }
+        .page-link:hover { color: #1890FF; }
+        /* 弹窗样式 */
+        .modal-title { font-size: 16px; font-weight: 600; }
+        .modal-body { font-size: 13px; }
+        .modal-footer { padding: 10px 20px; border-top: 1px solid #f0f0f0; }
+        /* 标签页样式 */
+        .nav-tabs .nav-link { color: #666; border: none; border-bottom: 2px solid transparent; padding: 10px 20px; font-size: 14px; }
+        .nav-tabs .nav-link.active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+        .tab-content { margin-top: 20px; }
+        /* 表单样式 */
+        .form-group { margin-bottom: 15px; }
+        .form-label { font-weight: 500; margin-bottom: 8px; display: block; font-size: 13px; }
+        .form-text { color: #666; font-size: 12px; margin-top: 5px; }
+        .required-mark { color: #FF4D4F; margin-left: 2px; }
+        /* 资质上传样式 */
+        .upload-area { border: 1px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer; transition: border-color 0.3s; }
+        .upload-area:hover { border-color: #1890FF; }
+        .upload-icon { font-size: 24px; color: #1890FF; margin-bottom: 10px; }
+        .upload-text { color: #666; font-size: 13px; }
+        .upload-preview { margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; }
+        .preview-img { width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+        /* 护理员特殊提示 */
+        .nurse-alert { background-color: #fff1f0; border-left: 3px solid #FF4D4F; padding: 10px 15px; margin-bottom: 20px; border-radius: 4px; }
+        .nurse-alert i { color: #FF4D4F; margin-right: 8px; }
+        .nurse-alert text { color: #666; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 侧边导航（管理员专属） -->
+        <div class="sidebar">
+            <div class="sidebar-logo">
+                <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+                <h3>管理员工作平台</h3>
+            </div>
+            
+            <!-- 导航分组：系统配置 -->
+            <div class="nav-group-title">系统配置</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="机构信息配置.html" class="nav-link">
+                        <i class="fa fa-building-o"></i>
+                        <span>机构信息配置</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="套餐管理.html" class="nav-link">
+                        <i class="fa fa-cog"></i>
+                        <span>套餐管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="行政区划.html" class="nav-link">
+                        <i class="fa fa-book"></i>
+                        <span>行政区域管理</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- 导航分组：用户管理 -->
+            <div class="nav-group-title">用户管理</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="角色配置.html" class="nav-link active">
+                        <i class="fa fa-user-secret"></i>
+                        <span>角色权限配置</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <!-- 导航分组：日志管理 -->
+            <div class="nav-group-title">数据管理</div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="服务线索批量导入.html" class="nav-link">
+                        <i class="fa fa-upload"></i>
+                        <span>服务对象数据批量导入</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="服务对象数据维护.html" class="nav-link">
+                        <i class="fa fa-edit"></i>
+                        <span>服务对象数据维护</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保工单导入.html" class="nav-link">
+                        <i class="fa fa-file-excel-o"></i>
+                        <span>医保平台工单导入</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保平台新增服务对象数据.html" class="nav-link">
+                        <i class="fa fa-download"></i>
+                        <span>医保平台新增服务对象数据导出</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="医保对账数据管理.html" class="nav-link">
+                        <i class="fa fa-calculator"></i>
+                        <span>医保对账数据管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="关键数据配置.html" class="nav-link">
+                        <i class="fa fa-wrench"></i>
+                        <span>其他数据维护</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="top-nav">
+                <h1 class="page-title">用户管理</h1>
+                <div class="user-info">
+                    <div class="notification">
+                        <i class="fa fa-bell-o"></i>
+                        <span class="notification-badge">2</span>
+                    </div>
+                    <div class="user-avatar">管</div>
+                    <span class="user-name">系统管理员</span>
+                </div>
+            </div>
+
+            <!-- 用户列表筛选区 -->
+            <div class="filter-bar">
+                <div class="filter-item">
+                    <label class="filter-label">角色</label>
+                    <select class="form-select">
+                        <option value="">全部角色</option>
+                        <option value="admin">系统管理员</option>
+                        <option value="service_supervisor">服务主管</option>
+                        <option value="org_manager">机构负责人</option>
+                        <option value="assessor">评估员</option>
+                        <option value="scheduler">排单员</option>
+                        <option value="archive_manager">档案管理员</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">状态</label>
+                    <select class="form-select">
+                        <option value="">全部状态</option>
+                        <option value="active">正常</option>
+                        <option value="locked">锁定</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label class="filter-label">姓名/账号</label>
+                    <input type="text" class="form-control" placeholder="请输入姓名或账号">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-sm btn-primary"><i class="fa fa-search"></i> 查询</button>
+                    <button class="btn btn-sm btn-outline-secondary"><i class="fa fa-refresh"></i> 重置</button>
+                </div>
+            </div>
+
+            <!-- 用户列表 -->
+            <div class="card">
+                <div class="card-header">
+                    <span>用户列表</span>
+                    <button class="btn btn-sm btn-primary" id="addUserBtn"><i class="fa fa-plus"></i> 新增用户</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover user-table">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th class="text-left">姓名</th>
+                                    <th>账号</th>
+                                    <th>角色</th>
+                                    <th>联系电话</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td class="text-left">张三</td>
+                                    <td>admin_zhangsan</td>
+                                    <td><span class="role-badge">系统管理员</span></td>
+                                    <td>138****1234</td>
+                                    <td>2024-01-15 09:30:25</td>
+                                    <td><span class="status-active"><i class="fa fa-check-circle"></i> 正常</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary edit-user-btn" data-id="1"><i class="fa fa-pencil"></i> 编辑</button>
+                                        <button class="btn btn-sm btn-danger lock-user-btn" data-id="1" data-status="active"><i class="fa fa-lock"></i> 锁定</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td class="text-left">李四</td>
+                                    <td>supervisor_lisi</td>
+                                    <td><span class="role-badge">服务主管</span></td>
+                                    <td>139****5678</td>
+                                    <td>2024-02-20 14:15:40</td>
+                                    <td><span class="status-active"><i class="fa fa-check-circle"></i> 正常</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary edit-user-btn" data-id="2"><i class="fa fa-pencil"></i> 编辑</button>
+                                        <button class="btn btn-sm btn-danger lock-user-btn" data-id="2" data-status="active"><i class="fa fa-lock"></i> 锁定</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td class="text-left">王五</td>
+                                    <td>nurse_wangwu</td>
+                                    <td><span class="role-badge">护理员</span></td>
+                                    <td>137****9012</td>
+                                    <td>2024-03-10 11:20:35</td>
+                                    <td><span class="status-active"><i class="fa fa-check-circle"></i> 正常</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary edit-user-btn" data-id="3"><i class="fa fa-pencil"></i> 编辑</button>
+                                        <button class="btn btn-sm btn-danger lock-user-btn" data-id="3" data-status="active"><i class="fa fa-lock"></i> 锁定</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>4</td>
+                                    <td class="text-left">赵六</td>
+                                    <td>assessor_zhaoliu</td>
+                                    <td><span class="role-badge">评估员</span></td>
+                                    <td>136****3456</td>
+                                    <td>2024-04-05 16:40:15</td>
+                                    <td><span class="status-locked"><i class="fa fa-lock"></i> 锁定</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-secondary edit-user-btn" data-id="4"><i class="fa fa-pencil"></i> 编辑</button>
+                                        <button class="btn btn-sm btn-outline-secondary unlock-user-btn" data-id="4" data-status="locked"><i class="fa fa-unlock"></i> 解锁</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- 分页 -->
+                    <div class="pagination-container">
+                        <nav aria-label="Page navigation example">
+                            <ul class="pagination">
+                                <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                                <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增/编辑用户弹窗 -->
+    <div class="modal fade" id="userModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">新增用户</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm">
+                        
+                        <ul class="nav nav-tabs" id="userTab" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="base-info-tab" data-bs-toggle="tab" data-bs-target="#base-info" type="button" role="tab" aria-controls="base-info" aria-selected="true">基础信息</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="role-config-tab" data-bs-toggle="tab" data-bs-target="#role-config" type="button" role="tab" aria-controls="role-config" aria-selected="false">角色配置</button>
+                            </li>
+                        </ul>
+                        
+                        <div class="tab-content" id="userTabContent">
+                            <!-- 基础信息标签页 -->
+                            <div class="tab-pane fade show active" id="base-info" role="tabpanel" aria-labelledby="base-info-tab">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userName">员工姓名 <span class="required-mark">*</span></label>
+                                            <input type="text" class="form-control" id="userName" name="name" maxlength="30" placeholder="请输入员工姓名">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userAccount">登录账号 <span class="required-mark">*</span></label>
+                                            <input type="text" class="form-control" id="userAccount" name="login_name" maxlength="20" placeholder="请设置登录账号">
+                                            <div class="form-text">账号长度为6-20位，支持字母、数字和下划线</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userPassword">登录密码 <span class="required-mark" id="passwordRequired">*</span></label>
+                                            <input type="password" class="form-control" id="userPassword" name="login_pass" placeholder="请设置登录密码">
+                                            <div class="form-text">密码将使用MD5加密存储，编辑时留空则不修改密码</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userGender">性别 <span class="required-mark">*</span></label>
+                                            <select class="form-select" id="userGender" name="gender">
+                                                <option value="">请选择性别</option>
+                                                <option value="男">男</option>
+                                                <option value="女">女</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userSelfId">身份证号 <span class="required-mark">*</span></label>
+                                            <input type="text" class="form-control" id="userSelfId" name="selfid" maxlength="18" placeholder="请输入18位身份证号">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userBirthday">出生日期</label>
+                                            <input type="date" class="form-control" id="userBirthday" name="birthday" placeholder="出生日期">
+                                            <div class="form-text">数据库将根据身份证号自动维护</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userPhone">手机号 <span class="required-mark">*</span></label>
+                                            <input type="tel" class="form-control" id="userPhone" name="phone_num" maxlength="11" placeholder="请输入11位手机号">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userAddress">住址</label>
+                                            <input type="text" class="form-control" id="userAddress" name="address" maxlength="128" placeholder="请输入住址">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userContacts">紧急联系人姓名</label>
+                                            <input type="text" class="form-control" id="userContacts" name="contacts" maxlength="30" placeholder="请输入紧急联系人姓名">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userConPhone">紧急联系人手机号</label>
+                                            <input type="tel" class="form-control" id="userConPhone" name="con_phone_num" maxlength="11" placeholder="请输入11位手机号">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label class="form-label" for="userEduLevel">教育程度</label>
+                                            <select class="form-select" id="userEduLevel" name="edu_level">
+                                                <option value="">请选择教育程度</option>
+                                                <option value="1">小学</option>
+                                                <option value="2">初中</option>
+                                                <option value="3">高中/中专</option>
+                                                <option value="4">大专</option>
+                                                <option value="5">本科</option>
+                                                <option value="6">硕士及以上</option>
+                                            </select>
+                                            <div class="form-text">参考1.10教育程度配置</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 角色配置标签页 -->
+                            <div class="tab-pane fade" id="role-config" role="tabpanel" aria-labelledby="role-config-tab">
+                                <div class="form-group">
+                                    <label class="form-label">分配角色 <span class="required-mark">*</span></label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleAdmin" value="admin">
+                                                <label class="form-check-label" for="roleAdmin">管理员</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleServiceSupervisor" value="service_supervisor">
+                                                <label class="form-check-label" for="roleServiceSupervisor">服务主管</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleOrgManager" value="org_manager">
+                                                <label class="form-check-label" for="roleOrgManager">负责人</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleAssessor" value="assessor">
+                                                <label class="form-check-label" for="roleAssessor">外勤员</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleScheduler" value="scheduler">
+                                                <label class="form-check-label" for="roleScheduler">排单员</label>
+                                            </div>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="roleArchiveManager" value="archive_manager">
+                                                <label class="form-check-label" for="roleArchiveManager">档案管理员</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-text">注：系统管理员拥有所有权限，请勿随意分配</div>
+                                </div>
+                            </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="saveUserBtn">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 页面加载完成后初始化
+        $(function() {
+            // 新增用户按钮点击事件
+            $('#addUserBtn').click(function() {
+                // 重置表单
+                $('#userForm')[0].reset();
+                // 重置账号为可编辑状态
+                $('#userAccount').prop('readonly', false);
+                // 显示密码必填标记
+                $('#passwordRequired').show();
+                // 切换标签页到基础信息
+                $('#base-info-tab').click();
+                // 更新弹窗标题
+                $('#userModalTitle').text('新增用户');
+                // 显示弹窗
+                $('#userModal').modal('show');
+            });
+
+            // 编辑用户按钮点击事件
+            $('.edit-user-btn').click(function() {
+                const userId = $(this).data('id');
+                // 模拟获取用户数据（实际项目中从后端获取）
+                const userData = {
+                    id: userId,
+                    name: '王五',
+                    login_name: 'nurse_wangwu',
+                    gender: '男',
+                    selfid: '330101199001011234',
+                    birthday: '1990-01-01',
+                    phone_num: '13712349012',
+                    address: 'XX市XX区XX街道XX路123号',
+                    contacts: '王六',
+                    con_phone_num: '13812345678',
+                    edu_level: 3,
+                    roles: ['nurse']
+                };
+
+                // 填充基础信息
+                $('#userName').val(userData.name);
+                $('#userAccount').val(userData.login_name);
+                $('#userAccount').prop('readonly', true); // 编辑时账号不可修改（触发器保护）
+                $('#userPassword').val(''); // 编辑时清空密码字段
+                $('#passwordRequired').hide(); // 编辑时密码不是必填
+                $('#userGender').val(userData.gender);
+                $('#userSelfId').val(userData.selfid);
+                $('#userBirthday').val(userData.birthday);
+                $('#userPhone').val(userData.phone_num);
+                $('#userAddress').val(userData.address);
+                $('#userContacts').val(userData.contacts);
+                $('#userConPhone').val(userData.con_phone_num);
+                $('#userEduLevel').val(userData.edu_level);
+
+                // 选中角色
+                $('input[type="checkbox"]').prop('checked', false);
+                userData.roles.forEach(role => {
+                    const roleId = 'role' + role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                    $(`#${roleId}`).prop('checked', true);
+                });
+
+                // 更新弹窗标题
+                $('#userModalTitle').text('编辑用户');
+                // 显示弹窗
+                $('#userModal').modal('show');
+            });
+
+            // 角色选择变化事件（判断是否选中护理员）
+            $('input[type="checkbox"][value="nurse"]').change(function() {
+                if ($(this).is(':checked')) {
+                    $('#nurseAlert').show();
+                    $('#nurse-info-tab-container').show();
+                } else {
+                    $('#nurseAlert').hide();
+                    $('#nurse-info-tab-container').hide();
+                }
+            });
+
+            // 上传资质按钮点击事件
+            $('.upload-cert-btn').click(function() {
+                const userId = $(this).data('id');
+                // 模拟获取已上传的资质图片（实际项目中从后端获取）
+                const certData = {
+                    idCardFront: 'https://via.placeholder.com/80x120?text=身份证正面',
+                    idCardBack: 'https://via.placeholder.com/80x120?text=身份证反面',
+                    skillCert: ['https://via.placeholder.com/80x120?text=证书1', 'https://via.placeholder.com/80x120?text=证书2'],
+                    contract: ['https://via.placeholder.com/80x120?text=合同1', 'https://via.placeholder.com/80x120?text=合同2']
+                };
+
+                // 清空预览区
+                $('#idCardFrontPreview').empty();
+                $('#idCardBackPreview').empty();
+                $('#skillCertPreview').empty();
+                $('#contractPreview').empty();
+
+                // 填充已上传的图片
+                if (certData.idCardFront) {
+                    $('#idCardFrontPreview').append(`<img src="${certData.idCardFront}" class="preview-img" alt="身份证正面">`);
+                }
+                if (certData.idCardBack) {
+                    $('#idCardBackPreview').append(`<img src="${certData.idCardBack}" class="preview-img" alt="身份证反面">`);
+                }
+                certData.skillCert.forEach(img => {
+                    $('#skillCertPreview').append(`<img src="${img}" class="preview-img" alt="职业技能证书">`);
+                });
+                certData.contract.forEach(img => {
+                    $('#contractPreview').append(`<img src="${img}" class="preview-img" alt="服务合同">`);
+                });
+
+                // 显示弹窗
+                $('#certUploadModal').modal('show');
+            });
+
+            // 锁定/解锁用户按钮点击事件
+            $('.lock-user-btn, .unlock-user-btn').click(function() {
+                const userId = $(this).data('id');
+                const status = $(this).data('status');
+                const action = status === 'active' ? '锁定' : '解锁';
+                const confirmMsg = `确定要${action}该用户吗？${action}后用户将无法登录系统。`;
+
+                if (confirm(confirmMsg)) {
+                    // 模拟API请求（实际项目中发送AJAX请求）
+                    console.log(`用户${userId}已${action}`);
+                    // 更新按钮状态和文本
+                    if (status === 'active') {
+                        $(this).removeClass('btn-danger lock-user-btn').addClass('btn-outline-secondary unlock-user-btn');
+                        $(this).data('status', 'locked');
+                        $(this).html('<i class="fa fa-unlock"></i> 解锁');
+                        // 更新状态列
+                        $(this).closest('tr').find('.status-active').removeClass('status-active').addClass('status-locked').html('<i class="fa fa-lock"></i> 锁定');
+                    } else {
+                        $(this).removeClass('btn-outline-secondary unlock-user-btn').addClass('btn-danger lock-user-btn');
+                        $(this).data('status', 'active');
+                        $(this).html('<i class="fa fa-lock"></i> 锁定');
+                        // 更新状态列
+                        $(this).closest('tr').find('.status-locked').removeClass('status-locked').addClass('status-active').html('<i class="fa fa-check-circle"></i> 正常');
+                    }
+                    alert(`用户已成功${action}！`);
+                }
+            });
+
+            // 保存用户按钮点击事件
+            $('#saveUserBtn').click(function() {
+                // 表单校验（实际项目中需要完善校验逻辑）
+                const userName = $('#userName').val().trim();
+                const userAccount = $('#userAccount').val().trim();
+                const userPassword = $('#userPassword').val().trim();
+                const userGender = $('#userGender').val();
+                const userSelfId = $('#userSelfId').val().trim();
+                const userPhone = $('#userPhone').val().trim();
+                const userAddress = $('#userAddress').val().trim();
+                const userContacts = $('#userContacts').val().trim();
+                const userConPhone = $('#userConPhone').val().trim();
+                const userEduLevel = $('#userEduLevel').val();
+                const roles = [];
+                $('input[type="checkbox"]:checked').each(function() {
+                    roles.push($(this).val());
+                });
+
+                if (!userName) {
+                    alert('请输入员工姓名');
+                    return;
+                }
+                if (userName.length > 30) {
+                    alert('员工姓名不能超过30个字符');
+                    return;
+                }
+                if (!userAccount) {
+                    alert('请设置登录账号');
+                    return;
+                }
+                if (userAccount.length < 6 || userAccount.length > 20) {
+                    alert('登录账号长度为6-20位');
+                    return;
+                }
+                const isAddMode = $('#userModalTitle').text() === '新增用户';
+                if (isAddMode && !userPassword) {
+                    alert('请设置登录密码');
+                    return;
+                }
+                if (!userGender) {
+                    alert('请选择性别');
+                    return;
+                }
+                if (!userSelfId) {
+                    alert('请输入身份证号');
+                    return;
+                }
+                if (userSelfId.length !== 18) {
+                    alert('身份证号必须为18位');
+                    return;
+                }
+                if (!userPhone) {
+                    alert('请输入手机号');
+                    return;
+                }
+                if (userPhone.length !== 11 || !/^1[3-9]\d{9}$/.test(userPhone)) {
+                    alert('请输入正确的11位手机号');
+                    return;
+                }
+                if (userAddress && userAddress.length > 128) {
+                    alert('住址不能超过128个字符');
+                    return;
+                }
+                if (userContacts && userContacts.length > 30) {
+                    alert('紧急联系人姓名不能超过30个字符');
+                    return;
+                }
+                if (userConPhone && (userConPhone.length !== 11 || !/^1[3-9]\d{9}$/.test(userConPhone))) {
+                    alert('请输入正确的11位紧急联系人手机号');
+                    return;
+                }
+                if (roles.length === 0) {
+                    alert('请至少分配一个角色');
+                    return;
+                }
+
+                // 模拟保存（实际项目中发送AJAX请求）
+                console.log('保存用户信息:', {
+                    name: userName,
+                    login_name: userAccount,
+                    login_pass: userPassword ? 'MD5加密后的密码' : '不修改',
+                    gender: userGender,
+                    selfid: userSelfId,
+                    phone_num: userPhone,
+                    address: userAddress,
+                    contacts: userContacts,
+                    con_phone_num: userConPhone,
+                    edu_level: userEduLevel,
+                    roles: roles
+                });
+
+                // 关闭弹窗并刷新列表（实际项目中需要重新获取用户列表）
+                $('#userModal').modal('hide');
+                alert('用户信息保存成功！');
+            });
+
+            // 确认上传按钮点击事件
+            $('#confirmUploadBtn').click(function() {
+                // 模拟上传（实际项目中发送AJAX请求上传文件）
+                console.log('确认上传资质文件');
+                // 关闭弹窗
+                $('#certUploadModal').modal('hide');
+                alert('资质文件上传成功！已生成护理员电子档案。');
+            });
+
+            // 模拟上传区域点击事件（实际项目中需要结合文件上传插件）
+            $('.upload-area').click(function() {
+                // 这里只是模拟，实际项目中需要触发文件选择框
+                const uploadId = $(this).attr('id');
+                console.log(`点击上传区域: ${uploadId}`);
+                // 模拟上传成功后添加预览图
+                if (uploadId === 'idCardFrontUpload') {
+                    $('#idCardFrontPreview').html('<img src="https://via.placeholder.com/80x120?text=身份证正面" class="preview-img" alt="身份证正面">');
+                } else if (uploadId === 'idCardBackUpload') {
+                    $('#idCardBackPreview').html('<img src="https://via.placeholder.com/80x120?text=身份证反面" class="preview-img" alt="身份证反面">');
+                } else if (uploadId === 'skillCertUpload') {
+                    $('#skillCertPreview').html('<img src="https://via.placeholder.com/80x120?text=证书1" class="preview-img" alt="职业技能证书"><img src="https://via.placeholder.com/80x120?text=证书2" class="preview-img" alt="职业技能证书">');
+                } else if (uploadId === 'contractUpload') {
+                    $('#contractPreview').html('<img src="https://via.placeholder.com/80x120?text=合同1" class="preview-img" alt="服务合同"><img src="https://via.placeholder.com/80x120?text=合同2" class="preview-img" alt="服务合同">');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

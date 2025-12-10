@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>服务对象数据维护 - 居家长护业务管理系统</title>
+  <!-- 引入外部资源 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <style>
+    /* 继承全局样式 */
+    body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+    .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+    .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+    .btn-outline-secondary { border-color: #ddd; color: #666; }
+    .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+    .btn-danger { background-color: #FF4D4F; border-color: #FF4D4F; }
+    .btn-danger:hover { background-color: #F5222D; border-color: #F5222D; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; }
+    .card-body { padding: 20px; }
+    /* 布局样式 */
+    .app-container { display: flex; min-height: 100vh; }
+    /* 侧边导航 */
+    .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+    .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+    .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+    .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+    .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+    /* 主内容区 */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+    /* 顶部导航 */
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+    .user-info { display: flex; align-items: center; }
+    .notification { position: relative; margin-right: 20px; cursor: pointer; }
+    .notification i { font-size: 20px; color: #666; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+    .user-name { font-size: 14px; font-weight: 500; }
+    /* 服务对象维护专属样式 */
+    .search-row { display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; }
+    .search-col { flex: 1; min-width: 150px; }
+    .form-label { font-weight: 500; }
+    .table th { 
+      font-size: 13px; 
+      color: #999; 
+      text-align: center; 
+      font-weight: 600;
+      background-color: #f8f9fa;
+    }
+    .table td { 
+      font-size: 13px; 
+      vertical-align: middle; 
+      text-align: center; 
+    }
+    .table .text-primary { 
+      cursor: pointer; 
+      color: #1890FF;
+      text-decoration: none;
+    }
+    .table .text-primary:hover { 
+      text-decoration: underline; 
+      color: #096DD9;
+    }
+    .table .text-muted {
+      color: #999;
+      margin: 0 5px;
+    }
+    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .status-normal { background-color: #E6F7E6; color: #52C41A; }
+    .status-pause { background-color: #FFF7E6; color: #FAAD14; }
+    .status-transfer { background-color: #E6F7FF; color: #1890FF; }
+    .status-death { background-color: #FFE6E6; color: #FF4D4F; }
+    .modal-lg { max-width: 800px; }
+    .form-text.text-danger { font-size: 12px; }
+    .upload-area { 
+      border: 2px dashed #dee2e6; 
+      border-radius: 8px; 
+      padding: 20px; 
+      text-align: center; 
+      transition: all 0.3s ease; 
+      cursor: pointer; 
+      background-color: transparent;
+    }
+    .upload-area:hover { 
+      border-color: #1890FF; 
+      background-color: rgba(24, 144, 255, 0.05); 
+    }
+    .upload-area i { 
+      font-size: 24px; 
+      color: #1890FF; 
+      margin-bottom: 8px; 
+      display: block;
+    }
+    .upload-area p {
+      margin: 0;
+      color: #666;
+      font-size: 13px;
+    }
+    .uploaded-file { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 8px; 
+      background-color: #f5f5f5; 
+      border-radius: 4px; 
+      margin-top: 10px; 
+    }
+    .uploaded-file span { 
+      flex: 1; 
+      text-overflow: ellipsis; 
+      white-space: nowrap; 
+      overflow: hidden; 
+      font-size: 12px; 
+      color: #333;
+    }
+    .uploaded-file button { 
+      background: none; 
+      border: none; 
+      color: #FF4D4F; 
+      cursor: pointer; 
+      padding: 0 8px; 
+      font-size: 14px;
+    }
+    .uploaded-file button:hover { 
+      color: #F5222D; 
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边导航 -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+          <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+          <h3>管理员工作平台</h3>
+      </div>
+      
+      <!-- 导航分组：系统配置 -->
+      <div class="nav-group-title">系统配置</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="机构信息配置.html" class="nav-link">
+                  <i class="fa fa-building-o"></i>
+                  <span>机构信息配置</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="套餐管理.html" class="nav-link">
+                  <i class="fa fa-cog"></i>
+                  <span>套餐管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="行政区划.html" class="nav-link">
+                  <i class="fa fa-book"></i>
+                  <span>行政区域管理</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：用户管理 -->
+      <div class="nav-group-title">用户管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="角色配置.html" class="nav-link">
+                  <i class="fa fa-user-secret"></i>
+                  <span>角色权限配置</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：日志管理 -->
+      <div class="nav-group-title">数据管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="服务线索批量导入.html" class="nav-link">
+                  <i class="fa fa-upload"></i>
+                  <span>服务对象数据批量导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="服务对象数据维护.html" class="nav-link active">
+                  <i class="fa fa-edit"></i>
+                  <span>服务对象数据维护</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保工单导入.html" class="nav-link">
+                  <i class="fa fa-file-excel-o"></i>
+                  <span>医保平台工单导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保平台新增服务对象数据.html" class="nav-link">
+                  <i class="fa fa-download"></i>
+                  <span>医保平台新增服务对象数据导出</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保对账数据管理.html" class="nav-link">
+                  <i class="fa fa-calculator"></i>
+                  <span>医保对账数据管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="关键数据配置.html" class="nav-link">
+                  <i class="fa fa-wrench"></i>
+                  <span>其他数据维护</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 顶部导航：标题 + 操作按钮 -->
+      <div class="top-nav">
+        <h1 class="page-title">服务对象数据维护</h1>
+        <div class="user-info">
+          <div class="notification">
+            <i class="fa fa-bell-o"></i>
+            <span class="notification-badge">3</span>
+          </div>
+          <div class="user-avatar">管</div>
+          <div class="user-name">系统管理员</div>
+        </div>
+      </div>
+
+      <!-- 筛选区 + 表格区 -->
+      <div class="card">
+        <div class="card-body">
+          <!-- 筛选条件 -->
+          <div class="search-row">
+            <div class="search-col">
+              <label for="searchName" class="form-label">姓名</label>
+              <input type="text" class="form-control" id="searchName" placeholder="请输入姓名模糊搜索">
+            </div>
+            <div class="search-col">
+              <label for="searchIdCard" class="form-label">身份证号</label>
+              <input type="text" class="form-control" id="searchIdCard" placeholder="请输入身份证号模糊搜索">
+            </div>
+            <div class="search-col">
+              <label for="searchRegion" class="form-label">行政区域</label>
+              <select class="form-select" id="searchRegion">
+                <option value="">全部区域</option>
+                <option value="1">社区A</option>
+                <option value="2">社区B</option>
+                <option value="3">村镇C</option>
+                <option value="4">村镇D</option>
+              </select>
+            </div>
+            <div class="search-col">
+              <label for="searchStatus" class="form-label">服务状态</label>
+              <select class="form-select" id="searchStatus">
+                <option value="">全部状态</option>
+                <option value="normal">正常</option>
+                <option value="pause">暂停</option>
+                <option value="transfer">转出</option>
+                <option value="death">死亡</option>
+              </select>
+            </div>
+            <div class="search-col" style="flex: none;">
+              <button id="searchBtn" class="btn btn-primary w-100">
+                <i class="fa fa-search"></i> 查询
+              </button>
+            </div>
+          </div>
+
+          <!-- 服务对象列表 -->
+          <div class="table-responsive">
+            <table class="table table-hover table-striped">
+              <thead>
+                <tr>
+                  <th>姓名</th>
+                  <th>性别</th>
+                  <th>身份证号</th>
+                  <th>手机号</th>
+                  <th>居住地</th>
+                  <th>失能等级</th>
+                  <th>医保类型</th>
+                  <th>服务状态</th>
+                  <th>外勤评估日期</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="serviceObjectTable">
+                <!-- 模拟数据 -->
+                <tr>
+                  <td>张三</td>
+                  <td>女</td>
+                  <td>110101********1234</td>
+                  <td>13800138001</td>
+                  <td>社区A</td>
+                  <td>重度（一级）</td>
+                  <td>职工医保</td>
+                  <td><span class="status-badge status-normal">正常</span></td>
+                  <td>2024-01-15</td>
+                  <td>
+                    <a href="#" class="text-primary edit-btn" data-id="1" data-name="张三">编辑</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" class="text-primary special-maintain-btn" data-id="1" data-name="张三">特殊维护</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>李四</td>
+                  <td>男</td>
+                  <td>110102********5678</td>
+                  <td>13800138002</td>
+                  <td>社区B</td>
+                  <td>重度（二级）</td>
+                  <td>居民医保</td>
+                  <td><span class="status-badge status-pause">暂停</span></td>
+                  <td>2024-02-20</td>
+                  <td>
+                    <a href="#" class="text-primary edit-btn" data-id="2" data-name="李四">编辑</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" class="text-primary special-maintain-btn" data-id="2" data-name="李四">特殊维护</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>王五</td>
+                  <td>女</td>
+                  <td>110103********9012</td>
+                  <td>13800138003</td>
+                  <td>村镇C</td>
+                  <td>重度（三级）</td>
+                  <td>职工医保</td>
+                  <td><span class="status-badge status-transfer">转出</span></td>
+                  <td>2024-03-10</td>
+                  <td>
+                    <a href="#" class="text-primary edit-btn" data-id="3" data-name="王五">编辑</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" class="text-primary special-maintain-btn" data-id="3" data-name="王五">特殊维护</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td>赵六</td>
+                  <td>男</td>
+                  <td>110104********3456</td>
+                  <td>13800138004</td>
+                  <td>村镇D</td>
+                  <td>轻度</td>
+                  <td>居民医保</td>
+                  <td><span class="status-badge status-death">死亡</span></td>
+                  <td>2024-04-05</td>
+                  <td>
+                    <a href="#" class="text-primary edit-btn" data-id="4" data-name="赵六">编辑</a>
+                    <span class="text-muted">|</span>
+                    <a href="#" class="text-primary special-maintain-btn" data-id="4" data-name="赵六">特殊维护</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- 分页控件 -->
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <div class="text-muted">共 12 条数据，当前第 1 页</div>
+            <nav aria-label="Page navigation">
+              <ul class="pagination pagination-sm">
+                <li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>
+                <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item"><a class="page-link" href="#">下一页</a></li>
+              </ul>
+            </nav>
+          </div>
+
+          <!-- 导出按钮 -->
+          <button id="exportBtn" class="btn btn-outline-secondary mt-2">
+            <i class="fa fa-download"></i> 导出列表
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框1：基础数据编辑 -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">编辑服务对象 - <span id="editObjectName">张三</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+          <form id="editForm">
+            <input type="hidden" id="editObjectId">
+            
+            <!-- 基本信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2">基本信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editName" class="form-label">姓名 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editName" value="张三" disabled>
+                <div class="form-text text-muted">核心信息不可修改</div>
+              </div>
+              <div class="col-md-6">
+                <label for="editGender" class="form-label">性别</label>
+                <select class="form-select" id="editGender">
+                  <option value="">请选择</option>
+                  <option value="男">男</option>
+                  <option value="女" selected>女</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editIdCard" class="form-label">身份证号</label>
+                <input type="text" class="form-control" id="editIdCard" value="110101********1234" disabled>
+                <div class="form-text text-muted">核心信息不可修改</div>
+              </div>
+              <div class="col-md-6">
+                <label for="editPhoneNum" class="form-label">手机号 <span class="text-danger">*</span></label>
+                <input type="tel" class="form-control" id="editPhoneNum" value="13800138000" placeholder="请输入11位手机号" maxlength="11">
+                <div class="form-text text-danger" id="editPhoneError" style="display: none;">请输入有效的11位手机号</div>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editCellId" class="form-label">居住地小区/自然村 <span class="text-danger">*</span></label>
+                <select class="form-select" id="editCellId">
+                  <option value="">请选择</option>
+                  <option value="1" selected>社区A</option>
+                  <option value="2">社区B</option>
+                  <option value="3">村镇C</option>
+                  <option value="4">村镇D</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="editAddress" class="form-label">具体住址 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="editAddress" value="北京市朝阳区XX路XX小区1号楼1单元101室" placeholder="请输入详细居住地址">
+              </div>
+            </div>
+
+            <!-- 代理人信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">代理人信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editAgent" class="form-label">代理人姓名</label>
+                <input type="text" class="form-control" id="editAgent" placeholder="请输入代理人姓名">
+              </div>
+              <div class="col-md-6">
+                <label for="editAgentPhone" class="form-label">代理人手机号</label>
+                <input type="tel" class="form-control" id="editAgentPhone" placeholder="请输入11位手机号" maxlength="11">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editAgentId" class="form-label">代理人身份证号</label>
+                <input type="text" class="form-control" id="editAgentId" placeholder="请输入18位身份证号" maxlength="18">
+              </div>
+              <div class="col-md-6">
+                <label for="editRelation" class="form-label">代理人关系</label>
+                <select class="form-select" id="editRelation">
+                  <option value="">请选择</option>
+                  <option value="1">配偶</option>
+                  <option value="2">子女</option>
+                  <option value="3">父母</option>
+                  <option value="4">其他</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 失能相关信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">失能相关信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="editDisLevel" class="form-label">失能等级</label>
+                <select class="form-select" id="editDisLevel">
+                  <option value="">请选择</option>
+                  <option value="1">轻度</option>
+                  <option value="2">中度</option>
+                  <option value="3">重度（一级）</option>
+                  <option value="4">重度（二级）</option>
+                  <option value="5">重度（三级）</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="editDisabledLevel" class="form-label">残疾等级</label>
+                <select class="form-select" id="editDisabledLevel">
+                  <option value="">请选择</option>
+                  <option value="1">一级</option>
+                  <option value="2">二级</option>
+                  <option value="3">三级</option>
+                  <option value="4">四级</option>
+                </select>
+              </div>
+              <div class="col-md-4">
+                <label for="editDisReason" class="form-label">失能原因</label>
+                <select class="form-select" id="editDisReason">
+                  <option value="">请选择</option>
+                  <option value="1">疾病</option>
+                  <option value="2">意外</option>
+                  <option value="3">年老</option>
+                  <option value="4">其他</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 医保信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">医保信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editMedicalType" class="form-label">医保类型</label>
+                <select class="form-select" id="editMedicalType">
+                  <option value="">请选择</option>
+                  <option value="1" selected>职工医保</option>
+                  <option value="2">居民医保</option>
+                  <option value="3">其他</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="editOtherRegion" class="form-label">是否本省异地参保</label>
+                <select class="form-select" id="editOtherRegion">
+                  <option value="">请选择</option>
+                  <option value="1">是</option>
+                  <option value="0" selected>否</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editMla" class="form-label">是否低保户</label>
+                <select class="form-select" id="editMla">
+                  <option value="">请选择</option>
+                  <option value="1">是</option>
+                  <option value="0" selected>否</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 地理信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">地理信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-4">
+                <label for="editLatitude" class="form-label">地理经度</label>
+                <input type="number" step="any" class="form-control" id="editLatitude" placeholder="请输入经度">
+              </div>
+              <div class="col-md-4">
+                <label for="editLongitude" class="form-label">地理纬度</label>
+                <input type="number" step="any" class="form-control" id="editLongitude" placeholder="请输入纬度">
+              </div>
+              <div class="col-md-4">
+                <label for="editMarkAddr" class="form-label">信标地址</label>
+                <input type="text" class="form-control" id="editMarkAddr" placeholder="请输入信标地址">
+              </div>
+            </div>
+
+            <!-- 日期信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">日期信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editTabDate" class="form-label bg-danger text-white px-2 py-1 rounded">外勤上门评估日期 <span class="text-white">*</span></label>
+                <input type="date" class="form-control border-danger" id="editTabDate" style="border-left-width: 3px;">
+                <div class="form-text text-danger">红色字段：外勤评估时必须填写</div>
+              </div>
+              <div class="col-md-6">
+                <label for="editSubDate" class="form-label">机构提交材料日期</label>
+                <input type="date" class="form-control" id="editSubDate">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editPubDate" class="form-label">公示日期</label>
+                <input type="date" class="form-control" id="editPubDate">
+              </div>
+              <div class="col-md-6">
+                <label for="editSigDate" class="form-label">签约送达日期</label>
+                <input type="date" class="form-control" id="editSigDate">
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editExpFirstDate" class="form-label">预期首次服务日期</label>
+                <input type="date" class="form-control" id="editExpFirstDate" placeholder="用于提前上报">
+              </div>
+              <div class="col-md-6">
+                <label for="editProDate" class="form-label">提供线索的日期</label>
+                <input type="date" class="form-control" id="editProDate" placeholder="自行摸排为空">
+              </div>
+            </div>
+
+            <!-- 其他信息 -->
+            <h6 class="mb-3 text-primary border-bottom pb-2 mt-4">其他信息</h6>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editOpId" class="form-label">外勤标识</label>
+                <select class="form-select" id="editOpId">
+                  <option value="">请选择</option>
+                  <option value="1">外勤A（ID:001）</option>
+                  <option value="2">外勤B（ID:002）</option>
+                  <option value="3">外勤C（ID:003）</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="editSalesId" class="form-label">线索提供人(销售)标识</label>
+                <select class="form-select" id="editSalesId">
+                  <option value="">请选择</option>
+                  <option value="1">销售A（ID:001）</option>
+                  <option value="2">销售B（ID:002）</option>
+                </select>
+              </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="editSalesName" class="form-label">线索提供人姓名(外部人员)</label>
+                <input type="text" class="form-control" id="editSalesName" placeholder="请输入线索提供人姓名">
+              </div>
+              <div class="col-md-6">
+                <label for="editNoserReason" class="form-label">不开始服务说明</label>
+                <input type="text" class="form-control" id="editNoserReason" placeholder="签约时不开始服务说明">
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="saveEditBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框2：特殊数据维护 -->
+  <div class="modal fade" id="specialMaintainModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">特殊数据维护 - <span id="maintainObjectName">张三</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="maintainForm">
+            <input type="hidden" id="maintainObjectId">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="maintainType" class="form-label">维护类型 <span class="text-danger">*</span></label>
+                <select class="form-select" id="maintainType" required>
+                  <option value="">请选择维护类型</option>
+                  <option value="grade">评估结果调整</option>
+                  <option value="status">服务状态修正</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="maintainNewValue" class="form-label">新值 <span class="text-danger">*</span></label>
+                <select class="form-select" id="maintainNewValue" disabled required>
+                  <option value="">请先选择维护类型</option>
+                  <!-- 评估结果调整选项 -->
+                  <option value="grade_1" data-type="grade">一级</option>
+                  <option value="grade_2" data-type="grade">二级</option>
+                  <option value="grade_3" data-type="grade">三级</option>
+                  <option value="grade_4" data-type="grade">四级</option>
+                  <!-- 服务状态修正选项 -->
+                  <option value="status_normal" data-type="status">正常</option>
+                  <option value="status_pause" data-type="status">暂停</option>
+                  <option value="status_transfer" data-type="status">转出</option>
+                  <option value="status_death" data-type="status">死亡</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="maintainReason" class="form-label">维护理由 <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="maintainReason" rows="3" placeholder="请详细说明维护理由（如：医保局重新出具评估结论，调整失能等级）" required></textarea>
+              <div class="form-text text-danger" id="maintainReasonError" style="display: none;">维护理由不能为空，且长度不小于10个字符</div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">证明材料上传 <span class="text-danger">*</span></label>
+              <div class="upload-area" id="proofUploadArea">
+                <i class="fa fa-cloud-upload"></i>
+                <p>点击或拖拽文件到此处（支持PDF/JPG，最大5MB）</p>
+              </div>
+              <input type="file" id="proofFileInput" class="d-none" accept=".pdf,.jpg,.jpeg">
+              <div id="uploadedFileContainer" style="display: none;"></div>
+              <div class="form-text text-danger" id="proofFileError" style="display: none;">请上传有效的证明材料</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-primary" id="submitMaintainBtn">提交审核</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 模态框3：操作成功提示 -->
+  <div class="modal fade" id="successModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+        <div class="modal-body text-center py-4">
+          <i class="fa fa-check-circle text-success" style="font-size: 48px; margin-bottom: 15px;"></i>
+          <h5 class="modal-title">操作成功</h5>
+          <p class="text-muted" id="successMsg">基础信息已成功保存</p>
+        </div>
+        <div class="modal-footer justify-content-center">
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal">确定</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 页面加载完成后初始化
+    $(function() {
+      // 初始化模态框
+      const editModal = new bootstrap.Modal('#editModal');
+      const specialMaintainModal = new bootstrap.Modal('#specialMaintainModal');
+      const successModal = new bootstrap.Modal('#successModal');
+
+      // 1. 查询按钮点击事件（模拟筛选）
+      $('#searchBtn').click(function() {
+        // 这里仅做UI反馈，实际项目中需调用后端接口筛选数据
+        const name = $('#searchName').val().trim();
+        const idCard = $('#searchIdCard').val().trim();
+        const region = $('#searchRegion').val();
+        const status = $('#searchStatus').val();
+        
+        console.log('筛选条件：', { name, idCard, region, status });
+        alert('已根据条件筛选，共找到 4 条匹配数据（模拟）');
+      });
+
+      // 2. 导出列表按钮点击事件
+      $('#exportBtn').click(function() {
+        // 模拟导出
+        alert('正在导出服务对象列表，请稍后...');
+        // 实际项目中调用后端接口导出Excel
+        // window.location.href = '/api/export/service-objects';
+      });
+
+      // 3. 编辑按钮点击事件
+      $('.edit-btn').click(function(e) {
+        e.preventDefault();
+        const objectId = $(this).data('id');
+        const objectName = $(this).data('name');
+        
+        // 填充模态框数据（模拟从接口获取）
+        $('#editObjectId').val(objectId);
+        $('#editObjectName').text(objectName);
+        $('#editName').val(objectName);
+        // 模拟身份证号（实际项目中从接口获取完整号，前端做脱敏展示）
+        const idCard = objectId === 1 ? '110101********1234' : 
+                       objectId === 2 ? '110102********5678' : 
+                       objectId === 3 ? '110103********9012' : '110104********3456';
+        $('#editIdCard').val(idCard);
+        
+        // 模拟填充其他字段（实际项目中从接口获取）
+        $('#editGender').val(objectId % 2 === 0 ? '男' : '女');
+        $('#editPhoneNum').val('1380013800' + objectId);
+        $('#editCellId').val(objectId <= 2 ? '1' : '3');
+        $('#editAddress').val('北京市朝阳区XX路XX小区' + objectId + '号楼1单元101室');
+        $('#editAgent').val('代理人' + objectName);
+        $('#editAgentPhone').val('1390013900' + objectId);
+        $('#editAgentId').val('');
+        $('#editRelation').val('2'); // 默认子女
+        $('#editDisLevel').val(objectId <= 2 ? '3' : '4');
+        $('#editDisabledLevel').val(objectId <= 2 ? '2' : '3');
+        $('#editDisReason').val('1');
+        $('#editMedicalType').val('1');
+        $('#editOtherRegion').val('0');
+        $('#editMla').val('0');
+        $('#editLatitude').val('');
+        $('#editLongitude').val('');
+        $('#editMarkAddr').val('');
+        $('#editTabDate').val('2024-01-15'); // 红色字段
+        $('#editSubDate').val('');
+        $('#editPubDate').val('');
+        $('#editSigDate').val('');
+        $('#editExpFirstDate').val('');
+        $('#editProDate').val('');
+        $('#editOpId').val('');
+        $('#editSalesId').val('');
+        $('#editSalesName').val('');
+        $('#editNoserReason').val('');
+        
+        // 重置错误提示
+        $('#editPhoneError').hide();
+        
+        // 显示模态框
+        editModal.show();
+      });
+
+      // 4. 保存编辑按钮点击事件
+      $('#saveEditBtn').click(function() {
+        const phoneNum = $('#editPhoneNum').val().trim();
+        const name = $('#editName').val().trim();
+        const cellId = $('#editCellId').val();
+        const address = $('#editAddress').val().trim();
+        const tabDate = $('#editTabDate').val(); // 红色字段
+        let isValid = true;
+
+        // 校验必填字段
+        if (!name) {
+          alert('姓名不能为空！');
+          isValid = false;
+        }
+        if (!phoneNum || !/^1[3-9]\d{9}$/.test(phoneNum)) {
+          $('#editPhoneError').show();
+          isValid = false;
+        } else {
+          $('#editPhoneError').hide();
+        }
+        if (!cellId) {
+          alert('请选择居住地小区/自然村！');
+          isValid = false;
+        }
+        if (!address) {
+          alert('请输入具体住址！');
+          isValid = false;
+        }
+        if (!tabDate) {
+          alert('请输入外勤上门评估日期（红色字段）！');
+          isValid = false;
+        }
+
+        if (!isValid) return;
+
+        // 模拟保存（实际项目中调用后端接口）
+        const objectId = $('#editObjectId').val();
+        const editData = {
+          objectId: objectId,
+          // 基本信息
+          name: name,
+          gender: $('#editGender').val(),
+          phoneNum: phoneNum,
+          cellId: cellId,
+          address: address,
+          // 代理人信息
+          agent: $('#editAgent').val().trim(),
+          agtPhoneNum: $('#editAgentPhone').val().trim(),
+          agentId: $('#editAgentId').val().trim(),
+          relation: $('#editRelation').val(),
+          // 失能相关信息
+          disLevel: $('#editDisLevel').val(),
+          disabledLevel: $('#editDisabledLevel').val(),
+          disReason: $('#editDisReason').val(),
+          // 医保信息
+          medicalType: $('#editMedicalType').val(),
+          otherRegion: $('#editOtherRegion').val(),
+          mla: $('#editMla').val(),
+          // 地理信息
+          latitude: $('#editLatitude').val(),
+          longitude: $('#editLongitude').val(),
+          markAddr: $('#editMarkAddr').val().trim(),
+          // 日期信息
+          tabDate: tabDate, // 红色字段
+          subDate: $('#editSubDate').val(),
+          pubDate: $('#editPubDate').val(),
+          sigDate: $('#editSigDate').val(),
+          expFirstDate: $('#editExpFirstDate').val(),
+          proDate: $('#editProDate').val(),
+          // 其他信息
+          opId: $('#editOpId').val(),
+          salesId: $('#editSalesId').val(),
+          salesName: $('#editSalesName').val().trim(),
+          noserReason: $('#editNoserReason').val().trim()
+        };
+        
+        console.log('保存编辑：', editData);
+        
+        // 隐藏编辑模态框，显示成功提示
+        editModal.hide();
+        $('#successMsg').text('服务对象信息已成功保存');
+        successModal.show();
+      });
+
+      // 5. 特殊维护按钮点击事件
+      $('.special-maintain-btn').click(function(e) {
+        e.preventDefault();
+        const objectId = $(this).data('id');
+        const objectName = $(this).data('name');
+        
+        // 填充模态框数据
+        $('#maintainObjectId').val(objectId);
+        $('#maintainObjectName').text(objectName);
+        // 重置表单
+        $('#maintainType').val('');
+        $('#maintainNewValue').val('').prop('disabled', true);
+        $('#maintainReason').val('');
+        $('#proofFileInput').val('');
+        $('#uploadedFileContainer').hide();
+        // 重置错误提示
+        $('#maintainReasonError').hide();
+        $('#proofFileError').hide();
+        
+        // 显示模态框
+        specialMaintainModal.show();
+      });
+
+      // 6. 维护类型下拉框变化事件（动态筛选新值选项）
+      $('#maintainType').change(function() {
+        const type = $(this).val();
+        const newValueSelect = $('#maintainNewValue');
+        
+        if (!type) {
+          newValueSelect.val('').prop('disabled', true);
+          return;
+        }
+
+        // 启用新值选择框，并筛选对应选项
+        newValueSelect.prop('disabled', false);
+        newValueSelect.find('option').each(function() {
+          const optionType = $(this).data('type');
+          if (optionType === type || $(this).val() === '') {
+            $(this).show();
+          } else {
+            $(this).hide();
+          }
+        });
+        // 默认选中第一个有效选项
+        newValueSelect.find('option[data-type="' + type + '"]:first').prop('selected', true);
+      });
+
+      // 7. 证明材料上传处理
+      const proofUploadArea = $('#proofUploadArea');
+      const proofFileInput = $('#proofFileInput');
+      const uploadedFileContainer = $('#uploadedFileContainer');
+
+      // 点击上传区域触发文件选择
+      proofUploadArea.click(() => proofFileInput.click());
+
+      // 拖拽上传事件
+      proofUploadArea.on('dragover', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        proofUploadArea.css({
+          'border-color': '#1890FF',
+          'background-color': 'rgba(24, 144, 255, 0.05)'
+        });
+      });
+      proofUploadArea.on('dragleave', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        proofUploadArea.css({
+          'border-color': '#dee2e6',
+          'background-color': 'transparent'
+        });
+      });
+      proofUploadArea.on('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        proofUploadArea.removeClass('border-primary bg-primary/5');
+        if (e.originalEvent.dataTransfer.files.length) {
+          proofFileInput[0].files = e.originalEvent.dataTransfer.files;
+          handleProofFileSelection();
+        }
+      });
+
+      // 文件选择后处理
+      proofFileInput.change(handleProofFileSelection);
+      function handleProofFileSelection() {
+        const file = proofFileInput[0].files[0];
+        if (!file) return;
+
+        // 验证文件格式和大小
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!['pdf', 'jpg', 'jpeg'].includes(ext)) {
+          alert('请上传PDF/JPG格式的证明材料！');
+          proofFileInput.val('');
+          return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+          alert('文件大小不能超过5MB！');
+          proofFileInput.val('');
+          return;
+        }
+
+        // 显示已上传文件
+        uploadedFileContainer.html(`
+          <div class="uploaded-file">
+            <span>${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)</span>
+            <button id="removeProofFileBtn"><i class="fa fa-times"></i></button>
+          </div>
+        `);
+        uploadedFileContainer.show();
+
+        // 移除文件按钮事件
+        $('#removeProofFileBtn').click(function() {
+          proofFileInput.val('');
+          uploadedFileContainer.hide();
+        });
+      }
+
+      // 8. 提交审核按钮点击事件
+      $('#submitMaintainBtn').click(function() {
+        const maintainType = $('#maintainType').val();
+        const maintainNewValue = $('#maintainNewValue').val();
+        const maintainReason = $('#maintainReason').val().trim();
+        const proofFile = proofFileInput[0].files[0];
+        let isValid = true;
+
+        // 校验必填项
+        if (!maintainType) {
+          alert('请选择维护类型！');
+          isValid = false;
+        } else if (!maintainNewValue) {
+          alert('请选择新值！');
+          isValid = false;
+        } else if (!maintainReason || maintainReason.length < 10) {
+          $('#maintainReasonError').show();
+          isValid = false;
+        } else {
+          $('#maintainReasonError').hide();
+        }
+
+        if (!proofFile) {
+          $('#proofFileError').show();
+          isValid = false;
+        } else {
+          $('#proofFileError').hide();
+        }
+
+        if (!isValid) return;
+
+        // 模拟提交审核（实际项目中调用后端接口）
+        const objectId = $('#maintainObjectId').val();
+        // 解析新值（如：grade_3 → 三级，status_normal → 正常）
+        const newValueText = maintainNewValue.startsWith('grade_') ? 
+                            ['一级', '二级', '三级', '四级'][maintainNewValue.split('_')[1] - 1] :
+                            ['正常', '暂停', '转出', '死亡'][['status_normal', 'status_pause', 'status_transfer', 'status_death'].indexOf(maintainNewValue)];
+        
+        console.log('提交特殊维护：', { 
+          objectId, 
+          maintainType: maintainType === 'grade' ? '评估结果调整' : '服务状态修正',
+          newValue: newValueText,
+          maintainReason,
+          proofFileName: proofFile.name
+        });
+
+        // 隐藏维护模态框，显示成功提示
+        specialMaintainModal.hide();
+        $('#successMsg').text('特殊维护申请已提交，等待机构负责人审批');
+        successModal.show();
+      });
+    });
+  </script>
+</body>
+</html>

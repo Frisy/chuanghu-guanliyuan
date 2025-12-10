@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<!--
+  行政区划管理页面
+  
+  修改日期：2025年12月5日
+  
+  主要功能：
+  1. 三级行政区域结构管理
+     - 城市：街道（一级） → 社区（二级） → 小区（三级-可设地标）
+     - 农村：乡镇（一级） → 村屯（二级） → 自然村（三级-可设地标）
+  
+  2. 多地标支持
+     - 每个小区/自然村可设置多个导航地标（如多个入口）
+     - 支持地标的新增、编辑、删除
+  
+  3. 特别关注区域管理
+     - 可将多个行政区域组合成特别关注区域
+     - 支持选择任意级别的行政区域
+     - 便于统计和重点关注特定区域
+  
+  数据库对应：
+  - cnf_street: 街道/乡镇（一级）
+  - cnf_community: 社区/村屯（二级）
+  - cnf_cell: 小区/自然村（三级）
+  - cnf_cell_mark: 地标信息（一对多）
+  - cnf_area: 特别关注区域
+  - cnf_area_cell: 特别关注区域与行政区域关联表
+-->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>行政区划管理 - 居家长护业务管理系统</title>
+  <!-- 引入外部资源 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery-ui@1.13.2/dist/jquery-ui.min.js"></script>
+  <!-- 引入树形结构插件（ Bootstrap Treeview） -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap-treeview@1.2.0/dist/bootstrap-treeview.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-treeview@1.2.0/dist/bootstrap-treeview.min.css">
+  
+  <style>
+    /* 继承全局样式 */
+    body { font-family: "微软雅黑", "思源黑体", sans-serif; background-color: #f5f7fa; color: #333; }
+    .btn-primary { background-color: #1890FF; border-color: #1890FF; }
+    .btn-primary:hover { background-color: #096DD9; border-color: #096DD9; }
+    .btn-outline-secondary { border-color: #ddd; color: #666; }
+    .btn-outline-secondary:hover { background-color: #f5f5f5; border-color: #ccc; }
+    .btn-danger { background-color: #FF4D4F; border-color: #FF4D4F; }
+    .btn-danger:hover { background-color: #F5222D; border-color: #F5222D; }
+    .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; }
+    .card-header { background: #fff; border-bottom: 1px solid #f0f0f0; border-radius: 12px 12px 0 0; padding: 15px 20px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .card-body { padding: 20px; }
+    /* 布局样式 */
+    .app-container { display: flex; min-height: 100vh; }
+    /* 侧边导航 */
+    .sidebar { width: 220px; background: #fff; box-shadow: 1px 0 2px rgba(0,0,0,0.05); padding: 20px 0; flex-shrink: 0; }
+    .sidebar-logo { text-align: center; padding: 0 20px 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+    .sidebar-logo img { height: 40px; margin-bottom: 8px; }
+    .sidebar-logo h3 { font-size: 16px; color: #1890FF; font-weight: 600; margin: 0; }
+    .nav-menu { list-style: none; padding: 0; margin: 0; }
+    .nav-item { margin-bottom: 4px; }
+    .nav-link { display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px; border-left: 3px solid transparent; }
+    .nav-link:hover, .nav-link.active { color: #1890FF; background-color: #f0f7ff; border-left: 3px solid #1890FF; }
+    .nav-link i { font-size: 18px; margin-right: 12px; width: 20px; text-align: center; }
+    .nav-group-title { padding: 15px 20px 5px; font-size: 12px; color: #999; font-weight: 500; }
+    /* 主内容区 */
+    .main-content { flex: 1; padding: 20px; overflow-y: auto; }
+    /* 顶部导航 */
+    .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .page-title { font-size: 20px; font-weight: 600; color: #333; margin: 0; }
+    .user-info { display: flex; align-items: center; }
+    .notification { position: relative; margin-right: 20px; cursor: pointer; }
+    .notification i { font-size: 20px; color: #666; }
+    .notification-badge { position: absolute; top: -5px; right: -5px; width: 18px; height: 18px; background: #FF4D4F; color: #fff; border-radius: 50%; font-size: 12px; text-align: center; line-height: 18px; }
+    .user-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1890FF; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; margin-right: 10px; }
+    .user-name { font-size: 14px; font-weight: 500; }
+    /* 标签页样式 */
+    .nav-tabs .nav-link { color: #666; border: none; border-bottom: 2px solid transparent; padding: 10px 20px; font-size: 14px; }
+    .nav-tabs .nav-link.active { color: #1890FF; border-bottom: 2px solid #1890FF; }
+    .tab-content { margin-top: 20px; }
+    /* 行政区划页面专属样式 */
+    .region-container { 
+      display: flex; 
+      gap: 20px; 
+      align-items: flex-start;
+    }
+    .tree-area { 
+      flex: 0 0 320px; 
+      max-width: 320px;
+      position: sticky;
+      top: 20px;
+    }
+    .operation-area { 
+      flex: 1; 
+      min-width: 350px; 
+    }
+    .landmark-area { 
+      flex: 1; 
+      min-width: 350px; 
+    }
+    
+    /* 树形结构样式增强 */
+    .treeview { 
+      max-height: calc(100vh - 200px);
+      overflow-y: auto;
+    }
+    .treeview .list-group-item { 
+      border: 1px solid transparent;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .treeview .list-group-item:hover { 
+      background-color: #f0f7ff;
+      border-color: #91d5ff;
+    }
+    .treeview .list-group-item.active { 
+      background-color: #1890FF !important; 
+      border-color: #1890FF !important;
+      color: #fff !important;
+      font-weight: 500;
+    }
+    .treeview .list-group-item.active:hover { 
+      background-color: #096DD9 !important;
+    }
+    .treeview .list-group-item {
+      white-space: nowrap;
+    }
+    .treeview .list-group-item .node-icon {
+      margin-right: 6px;
+      font-size: 14px;
+      width: 16px;
+      display: inline-block;
+      text-align: center;
+    }
+    .treeview .list-group-item.active .node-icon {
+      color: #fff;
+    }
+    .treeview .list-group-item .node-badge {
+      margin-left: 8px;
+      padding: 2px 6px;
+      background-color: rgba(0,0,0,0.1);
+      border-radius: 10px;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .treeview .list-group-item.active .node-badge {
+      background-color: rgba(255,255,255,0.3);
+      color: #fff;
+    }
+    .treeview .list-group-item:not(.active) .node-badge {
+      background-color: #e8f4ff;
+      color: #1890FF;
+    }
+    
+    /* 操作区样式增强 */
+    .operation-section {
+      margin-bottom: 20px;
+    }
+    .operation-section:last-child {
+      margin-bottom: 0;
+    }
+    .operation-section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0f0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .operation-section-title i {
+      color: #1890FF;
+    }
+    .region-info-card {
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .region-info-item {
+      display: flex;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .region-info-item:last-child {
+      margin-bottom: 0;
+    }
+    .region-info-label {
+      width: 80px;
+      color: #666;
+      flex-shrink: 0;
+    }
+    .region-info-value {
+      flex: 1;
+      color: #333;
+      font-weight: 500;
+    }
+    .operation-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .operation-buttons .btn {
+      flex: 1;
+      min-width: 120px;
+    }
+    .btn-disabled-hint {
+      position: relative;
+    }
+    .btn-disabled-hint[disabled] {
+      cursor: not-allowed;
+    }
+    .btn-disabled-hint[disabled]::after {
+      content: attr(data-hint);
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .btn-disabled-hint[disabled]::before {
+      content: '';
+      position: absolute;
+      bottom: calc(100% + 2px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: rgba(0,0,0,0.85);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 1001;
+    }
+    .btn-disabled-hint[disabled]:hover::after,
+    .btn-disabled-hint[disabled]:hover::before {
+      opacity: 1;
+    }
+    /* 地图模拟样式 */
+    .map-simulator { 
+      width: 100%; 
+      height: 350px; 
+      background: linear-gradient(135deg, #e8f4f8 0%, #d4e9f7 100%);
+      border: 2px dashed #91d5ff;
+      border-radius: 8px; 
+      display: flex; 
+      flex-direction: column;
+      align-items: center; 
+      justify-content: center; 
+      cursor: crosshair; 
+      position: relative;
+      overflow: hidden;
+    }
+    .map-simulator::before {
+      content: '点击地图选择位置';
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255,255,255,0.9);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #666;
+      z-index: 1;
+    }
+    .map-simulator.has-marker::before {
+      content: '拖动标记调整位置';
+    }
+    .map-simulator .map-placeholder {
+      text-align: center;
+      color: #999;
+      z-index: 0;
+    }
+    .map-simulator .map-placeholder i {
+      font-size: 48px;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .map-marker { 
+      position: absolute; 
+      width: 32px; 
+      height: 32px; 
+      background-color: #FF4D4F; 
+      border-radius: 50% 50% 50% 0; 
+      transform: rotate(-45deg); 
+      cursor: move;
+      z-index: 10;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+    .map-marker:hover {
+      transform: rotate(-45deg) scale(1.1);
+    }
+    .map-marker::after { 
+      content: ''; 
+      position: absolute; 
+      width: 16px; 
+      height: 16px; 
+      background-color: #fff; 
+      border-radius: 50%; 
+      top: 8px; 
+      left: 8px; 
+    }
+    .map-coords {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background-color: rgba(255,255,255,0.95);
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      color: #333;
+      z-index: 1;
+    }
+    /* 空状态样式 */
+    .empty-state { 
+      text-align: center; 
+      padding: 40px 20px; 
+      color: #999; 
+    }
+    .empty-state i { 
+      font-size: 48px; 
+      margin-bottom: 15px; 
+      display: block;
+      color: #ddd;
+    }
+    .empty-state p { 
+      font-size: 14px; 
+      margin-bottom: 5px;
+    }
+    .empty-state small {
+      font-size: 12px;
+      color: #bbb;
+    }
+    
+    /* 地标信息卡片样式 */
+    .landmark-card {
+      background-color: #fff;
+      border: 1px solid #e8e8e8;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 12px;
+      transition: all 0.2s;
+    }
+    .landmark-card:hover {
+      border-color: #1890FF;
+      box-shadow: 0 2px 8px rgba(24,144,255,0.1);
+    }
+    .landmark-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .landmark-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+    .landmark-card-body {
+      font-size: 13px;
+      color: #666;
+    }
+    .landmark-info-row {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    .landmark-info-row:last-child {
+      margin-bottom: 0;
+    }
+    .landmark-info-label {
+      width: 90px;
+      color: #999;
+      flex-shrink: 0;
+    }
+    .landmark-info-value {
+      flex: 1;
+      color: #333;
+    }
+    .landmark-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    /* 表单样式 */
+    .form-group { margin-bottom: 15px; }
+    .form-label { font-weight: 500; margin-bottom: 8px; display: block; font-size: 13px; }
+    .form-text { color: #666; font-size: 12px; margin-top: 5px; }
+    .required-mark { color: #FF4D4F; margin-left: 2px; }
+    /* 表格样式 */
+    .region-table th { font-size: 13px; font-weight: 600; color: #666; text-align: center; vertical-align: middle; }
+    .region-table td { font-size: 13px; vertical-align: middle; text-align: center; }
+    .region-table .text-left { text-align: left; }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- 侧边导航（管理员专属） -->
+    <div class="sidebar">
+      <div class="sidebar-logo">
+          <img src="https://via.placeholder.com/80x40?text=居家长护" alt="系统Logo">
+          <h3>管理员工作平台</h3>
+      </div>
+      
+      <!-- 导航分组：系统配置 -->
+      <div class="nav-group-title">系统配置</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="机构信息配置.html" class="nav-link">
+                  <i class="fa fa-building-o"></i>
+                  <span>机构信息配置</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="套餐管理.html" class="nav-link">
+                  <i class="fa fa-cog"></i>
+                  <span>套餐管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="行政区划.html" class="nav-link active">
+                  <i class="fa fa-book"></i>
+                  <span>行政区域管理</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：用户管理 -->
+      <div class="nav-group-title">用户管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="角色配置.html" class="nav-link">
+                  <i class="fa fa-user-secret"></i>
+                  <span>角色权限配置</span>
+              </a>
+          </li>
+      </ul>
+      
+      <!-- 导航分组：日志管理 -->
+      <div class="nav-group-title">数据管理</div>
+      <ul class="nav-menu">
+          <li class="nav-item">
+              <a href="服务线索批量导入.html" class="nav-link">
+                  <i class="fa fa-upload"></i>
+                  <span>服务对象数据批量导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="服务对象数据维护.html" class="nav-link">
+                  <i class="fa fa-edit"></i>
+                  <span>服务对象数据维护</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保工单导入.html" class="nav-link">
+                  <i class="fa fa-file-excel-o"></i>
+                  <span>医保平台工单导入</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保平台新增服务对象数据.html" class="nav-link">
+                  <i class="fa fa-download"></i>
+                  <span>医保平台新增服务对象数据导出</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="医保对账数据管理.html" class="nav-link">
+                  <i class="fa fa-calculator"></i>
+                  <span>医保对账数据管理</span>
+              </a>
+          </li>
+          <li class="nav-item">
+              <a href="关键数据配置.html" class="nav-link">
+                  <i class="fa fa-wrench"></i>
+                  <span>其他数据维护</span>
+              </a>
+          </li>
+      </ul>
+  </div>
+
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 顶部导航 -->
+      <div class="top-nav">
+        <h1 class="page-title">行政区划管理</h1>
+        <div class="user-info">
+          <div class="notification">
+            <i class="fa fa-bell-o"></i>
+            <span class="notification-badge">2</span>
+          </div>
+          <div class="user-avatar">管</div>
+          <span class="user-name">系统管理员</span>
+        </div>
+      </div>
+
+      <!-- 功能说明 -->
+      <div class="alert alert-info" role="alert">
+        <i class="fa fa-info-circle"></i>
+        <strong>功能说明：</strong>
+        <ul class="mb-0 mt-2">
+          <li><strong>三级行政区域结构：</strong>城市地区为"街道 → 社区 → 小区"，农村地区为"乡镇 → 村屯 → 自然村"</li>
+          <li><strong>地标设置：</strong>只有最后一级（小区/自然村）才可以设置导航地标，每个区域可设置多个地标（如多个入口）</li>
+          <li><strong>特别关注区域：</strong>可将多个行政区域组合成特别关注区域（如偏远山区），便于统计和管理</li>
+        </ul>
+      </div>
+
+      <!-- 标签页切换 -->
+      <ul class="nav nav-tabs" id="regionTab" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link active" id="region-config-tab" data-bs-toggle="tab" data-bs-target="#region-config" type="button" role="tab" aria-controls="region-config" aria-selected="true">行政区划配置</button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" id="special-region-tab" data-bs-toggle="tab" data-bs-target="#special-region" type="button" role="tab" aria-controls="special-region" aria-selected="false">特别关注区域</button>
+        </li>
+      </ul>
+      
+      <div class="tab-content" id="regionTabContent">
+        <!-- 行政区划配置标签页 -->
+        <div class="tab-pane fade show active" id="region-config" role="tabpanel" aria-labelledby="region-config-tab">
+          <div class="region-container">
+            <!-- 左侧树形结构区域 -->
+            <div class="tree-area card">
+              <div class="card-header">
+                <span>行政区划树形结构</span>
+              </div>
+              <div class="card-body">
+                <div class="alert alert-light py-2 px-3 mb-3" style="font-size: 12px;">
+                  <i class="fa fa-lightbulb-o"></i> 
+                  <strong>提示：</strong>点击区域节点可查看详情和进行操作
+                </div>
+                <div id="regionTree"></div>
+              </div>
+            </div>
+            
+            <!-- 中间操作区 -->
+            <div class="operation-area card">
+              <div class="card-header">
+                <span>操作区</span>
+              </div>
+              <div class="card-body">
+                <div id="no-selection" class="empty-state">
+                  <i class="fa fa-hand-pointer-o"></i>
+                  <p>请在左侧树形结构中选择一个区域</p>
+                  <small>选择区域后可进行新增、编辑、删除等操作</small>
+                </div>
+                <div id="region-operations" style="display: none;">
+                  <!-- 区域信息展示 -->
+                  <div class="operation-section">
+                    <div class="operation-section-title">
+                      <i class="fa fa-info-circle"></i> 区域信息
+                  </div>
+                    <div class="region-info-card">
+                      <div class="region-info-item">
+                        <span class="region-info-label">区域名称：</span>
+                        <span class="region-info-value" id="currentRegionName">-</span>
+                  </div>
+                      <div class="region-info-item">
+                        <span class="region-info-label">区域类型：</span>
+                        <span class="region-info-value" id="currentRegionType">-</span>
+                      </div>
+                      <div class="region-info-item" id="regionPathItem" style="display: none;">
+                        <span class="region-info-label">完整路径：</span>
+                        <span class="region-info-value" id="currentRegionPath">-</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 操作按钮 -->
+                  <div class="operation-section">
+                    <div class="operation-section-title">
+                      <i class="fa fa-cog"></i> 操作
+                    </div>
+                    <div class="operation-buttons">
+                      <button id="addSubRegionBtn" class="btn btn-primary">
+                        <i class="fa fa-plus"></i> 新增下级
+                      </button>
+                      <button id="editRegionBtn" class="btn btn-outline-secondary">
+                        <i class="fa fa-pencil"></i> 编辑
+                      </button>
+                      <button id="deleteRegionBtn" class="btn btn-danger btn-disabled-hint" data-hint="">
+                        <i class="fa fa-trash"></i> 删除
+                      </button>
+                      <button id="setLandmarkBtn" class="btn btn-outline-primary" style="display: none;">
+                        <i class="fa fa-map-marker"></i> 设置地标
+                      </button>
+                    </div>
+                    <div class="form-text text-muted mt-2" id="operationHint">
+                      <i class="fa fa-lightbulb-o"></i> 提示：选择区域后可进行相应操作
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 右侧地标信息区 -->
+            <div class="landmark-area card">
+              <div class="card-header">
+                <span>地标信息</span>
+                <button id="addLandmarkBtn" class="btn btn-sm btn-primary" style="display: none;">
+                  <i class="fa fa-plus"></i> 新增地标
+                </button>
+              </div>
+              <div class="card-body">
+                <div id="no-landmark" class="empty-state">
+                  <i class="fa fa-map"></i>
+                  <p>请选择一个最小区域（小区/自然村）</p>
+                  <small>只有最小区域可以设置导航地标</small>
+                </div>
+                <div id="landmark-list" style="display: none;">
+                  <div id="landmarkCardsContainer">
+                    <!-- 地标卡片将动态生成 -->
+                  </div>
+                  <div id="no-landmarks-yet" class="empty-state" style="display: none;">
+                    <i class="fa fa-map-marker"></i>
+                    <p>该区域暂无地标</p>
+                    <small>点击上方"新增地标"按钮添加导航地标</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 特别关注区域标签页 -->
+        <div class="tab-pane fade" id="special-region" role="tabpanel" aria-labelledby="special-region-tab">
+          <div class="alert alert-info" role="alert">
+            <i class="fa fa-info-circle"></i>
+            <strong>特别关注区域说明：</strong>
+            <ul class="mb-0 mt-2" style="padding-left: 20px;">
+              <li>可以将一个或多个行政区域（街道/乡镇、社区/村屯、小区/自然村）组合成特别关注区域</li>
+              <li>例如：将多个偏远乡镇设置为"偏远山区"，便于单独统计和重点关注该区域的服务情况</li>
+              <li>特别关注区域将形成独立的统计维度，用于运营数据分析和重点关注</li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <span>特别关注区域列表</span>
+              <button id="addSpecialRegionBtn" class="btn btn-sm btn-primary">
+                <i class="fa fa-plus"></i> 新增特别关注区域
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="no-special-regions" class="empty-state" style="display: none;">
+                <i class="fa fa-star-o"></i>
+                <p>暂无特别关注区域</p>
+                <small>点击上方"新增特别关注区域"按钮创建</small>
+              </div>
+              <div id="special-region-table">
+                <div class="table-responsive">
+                  <table class="table table-hover region-table">
+                    <thead>
+                      <tr>
+                        <th style="width: 60px;">序号</th>
+                        <th class="text-left" style="min-width: 150px;">区域名称</th>
+                        <th style="min-width: 300px;">包含行政区域</th>
+                        <th style="width: 150px;">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="specialRegionTableBody">
+                      <tr>
+                        <td>1</td>
+                        <td class="text-left">
+                          <strong>西部偏远山区</strong>
+                          <br><small class="text-muted">创建时间：2024-11-01</small>
+                        </td>
+                        <td>
+                          <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-primary">青山镇</span>
+                            <span class="badge bg-primary">绿水镇</span>
+                            <span class="badge bg-secondary">共5个村屯</span>
+                          </div>
+                        </td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-secondary edit-special-region-btn" data-id="1">
+                            <i class="fa fa-pencil"></i> 编辑
+                          </button>
+                          <button class="btn btn-sm btn-danger delete-special-region-btn" data-id="1">
+                            <i class="fa fa-trash"></i> 删除
+                          </button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>2</td>
+                        <td class="text-left">
+                          <strong>东部沿海新区</strong>
+                          <br><small class="text-muted">创建时间：2024-11-05</small>
+                        </td>
+                        <td>
+                          <div class="d-flex flex-wrap gap-1">
+                            <span class="badge bg-primary">滨海街道</span>
+                            <span class="badge bg-primary">港口街道</span>
+                            <span class="badge bg-secondary">共8个社区</span>
+                          </div>
+                        </td>
+                        <td>
+                          <button class="btn btn-sm btn-outline-secondary edit-special-region-btn" data-id="2">
+                            <i class="fa fa-pencil"></i> 编辑
+                          </button>
+                          <button class="btn btn-sm btn-danger delete-special-region-btn" data-id="2">
+                            <i class="fa fa-trash"></i> 删除
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑区域弹窗 -->
+  <div class="modal fade" id="regionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="regionModalTitle">新增下级区域</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="regionForm">
+            <input type="hidden" id="regionId">
+            <input type="hidden" id="parentId">
+            <div class="form-group">
+              <label class="form-label" for="regionName">区域名称 <span class="required-mark">*</span></label>
+              <input type="text" class="form-control" id="regionName" placeholder="请输入区域名称">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="regionType">区域类型 <span class="required-mark">*</span></label>
+              <select class="form-select" id="regionType" disabled>
+                <option value="">请选择区域类型</option>
+                <option value="street">街道（城市一级）</option>
+                <option value="community">社区（城市二级）</option>
+                <option value="residence">小区（城市三级-可设地标）</option>
+                <option value="township">乡镇（农村一级）</option>
+                <option value="village">村屯（农村二级）</option>
+                <option value="natural_village">自然村（农村三级-可设地标）</option>
+              </select>
+              <div class="form-text">提示：只有三级区域（小区/自然村）才可以设置导航地标</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" id="saveRegionBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑地标弹窗 -->
+  <div class="modal fade" id="landmarkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="landmarkModalTitle">新增地标 - <span id="landmarkRegionName">XX小区</span></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="landmarkForm">
+            <input type="hidden" id="landmarkId">
+            <input type="hidden" id="landmarkRegionId">
+            <ul class="nav nav-tabs" id="landmarkTab" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="map-marker-tab" data-bs-toggle="tab" data-bs-target="#map-marker" type="button" role="tab" aria-controls="map-marker" aria-selected="true">地图标注</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="manual-input-tab" data-bs-toggle="tab" data-bs-target="#manual-input" type="button" role="tab" aria-controls="manual-input" aria-selected="false">手动输入</button>
+              </li>
+            </ul>
+            <div class="tab-content" id="landmarkTabContent">
+              <!-- 地图标注标签页 -->
+              <div class="tab-pane fade show active" id="map-marker" role="tabpanel" aria-labelledby="map-marker-tab">
+                <div class="form-group mt-3">
+                  <label class="form-label">
+                    <i class="fa fa-map"></i> 地图标注位置
+                    <span class="text-muted" style="font-size: 12px; font-weight: normal;">（模拟高德地图）</span>
+                  </label>
+                  <div class="map-simulator" id="mapSimulator">
+                    <div class="map-placeholder">
+                      <i class="fa fa-map-o"></i>
+                      <div>点击地图选择位置</div>
+                  </div>
+                    <div class="map-coords" id="mapCoords" style="display: none;">
+                      经度: <span id="displayLongitude">-</span> | 纬度: <span id="displayLatitude">-</span>
+                    </div>
+                  </div>
+                  <div class="form-text">
+                    <i class="fa fa-info-circle"></i> 提示：点击地图标记位置，标记可拖动调整，经纬度会自动同步到"手动输入"标签页
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="mapLandmarkName">地标名称 <span class="required-mark">*</span></label>
+                  <input type="text" class="form-control" id="mapLandmarkName" placeholder="请输入地标名称（如XX小区东门）">
+                  <div class="form-text">建议为每个入口设置独立地标，便于护理员导航</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="mapRelativePosition">相对位置描述</label>
+                  <textarea class="form-control" id="mapRelativePosition" rows="2" placeholder="请输入相对位置描述（如距离XX公交站100米，地铁X号线X站X口出）"></textarea>
+                </div>
+              </div>
+              
+              <!-- 手动输入标签页 -->
+              <div class="tab-pane fade" id="manual-input" role="tabpanel" aria-labelledby="manual-input-tab">
+                <div class="alert alert-info mt-3" style="font-size: 12px; padding: 10px;">
+                  <i class="fa fa-lightbulb-o"></i> 
+                  <strong>提示：</strong>如果已在地图标注标签页标记位置，经纬度会自动同步到这里。您也可以直接手动输入经纬度。
+                </div>
+                <div class="form-group mt-3">
+                  <label class="form-label" for="manualLandmarkName">地标名称 <span class="required-mark">*</span></label>
+                  <input type="text" class="form-control" id="manualLandmarkName" placeholder="请输入地标名称（如XX小区东门、XX小区南门）">
+                  <div class="form-text">建议为每个入口设置独立地标，便于护理员导航</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">经纬度 <span class="required-mark">*</span></label>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label" style="font-size: 12px; margin-bottom: 4px;">经度</label>
+                      <input type="text" class="form-control" id="manualLongitude" placeholder="如：116.481028">
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label" style="font-size: 12px; margin-bottom: 4px;">纬度</label>
+                      <input type="text" class="form-control" id="manualLatitude" placeholder="如：39.921983">
+                    </div>
+                  </div>
+                  <div class="form-text">
+                    <i class="fa fa-info-circle"></i> 经纬度格式：数字格式，如 116.481028（经度）、39.921983（纬度）
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="manualRelativePosition">相对位置描述</label>
+                  <textarea class="form-control" id="manualRelativePosition" rows="3" placeholder="请输入相对位置描述（如：距离XX公交站100米，地铁X号线X站X口出）"></textarea>
+                  <div class="form-text">相对位置描述有助于护理员更准确地找到服务地点</div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" id="saveLandmarkBtn">保存地标</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/编辑特别关注区域弹窗 -->
+  <div class="modal fade" id="specialRegionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="specialRegionModalTitle">新增特别关注区域</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="specialRegionForm">
+            <input type="hidden" id="specialRegionId">
+            <div class="form-group">
+              <label class="form-label" for="specialRegionName">区域名称 <span class="required-mark">*</span></label>
+              <input type="text" class="form-control" id="specialRegionName" placeholder="请输入特别关注区域名称（如西部偏远山区）">
+            </div>
+            <div class="form-group">
+              <label class="form-label">
+                选择包含的行政区域 <span class="required-mark">*</span>
+              </label>
+              <div class="alert alert-light mb-3" style="font-size: 12px; padding: 10px;">
+                <i class="fa fa-info-circle"></i>
+                <strong>提示：</strong>可以选择任意级别的行政区域（街道/乡镇、社区/村屯、小区/自然村），系统会自动包含其下级区域。例如：选择"青山镇"后，该镇下的所有村屯和自然村都会自动包含。
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header" style="padding: 10px 15px;">
+                      <span style="font-size: 14px; font-weight: 600;">
+                        <i class="fa fa-list"></i> 行政区域树
+                      </span>
+                      <button type="button" class="btn btn-xs btn-outline-secondary" id="expandAllRegions" style="font-size: 11px;">
+                        <i class="fa fa-expand"></i> 全部展开
+                      </button>
+                    </div>
+                    <div class="card-body" style="height: 400px; overflow-y: auto; padding: 10px;">
+                      <div id="specialRegionTree"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="card">
+                    <div class="card-header" style="padding: 10px 15px;">
+                      <span style="font-size: 14px; font-weight: 600;">
+                        <i class="fa fa-check-circle"></i> 已选区域
+                        <span class="badge bg-primary" id="selectedCount">0</span>
+                      </span>
+                      <button type="button" class="btn btn-xs btn-outline-danger" id="clearAllRegions" style="font-size: 11px;">
+                        <i class="fa fa-times"></i> 清空
+                      </button>
+                    </div>
+                    <div class="card-body" id="selectedRegionsContainer" style="height: 400px; overflow-y: auto; padding: 10px;">
+                      <div class="empty-state" id="no-selected-regions" style="padding: 30px 10px;">
+                        <i class="fa fa-info-circle"></i>
+                        <p style="font-size: 13px;">暂无选中区域</p>
+                        <small>请在左侧勾选行政区域</small>
+                      </div>
+                      <div id="selectedRegionsList" style="display: none;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">取消</button>
+          <button type="button" class="btn btn-sm btn-primary" id="saveSpecialRegionBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // 页面加载完成后初始化
+    $(function() {
+      // 初始化行政区划树形结构
+      initRegionTree();
+      
+      // 初始化特别关注区域树形结构（用于弹窗）
+      initSpecialRegionTree();
+      
+      // 特别关注区域弹窗显示时，重置展开/折叠按钮状态
+      $('#specialRegionModal').on('show.bs.modal', function() {
+        $('#expandAllRegions').data('expanded', false).html('<i class="fa fa-expand"></i> 全部展开');
+      });
+      
+      // 存储当前选中的节点（用于路径构建）
+      window.currentSelectedNode = null;
+      
+      // 标签页切换事件
+      $('#regionTab button').on('shown.bs.tab', function(e) {
+        const target = $(e.target).attr('data-bs-target');
+        if (target === '#special-region') {
+          // 检查是否有特别关注区域数据
+          checkSpecialRegionData();
+        } else if (target === '#region-config') {
+          // 切换回区域配置时，如果之前有选中节点，重新选中
+          if (window.currentSelectedNode) {
+            // 重新选中节点（需要重新初始化树或使用其他方法）
+          }
+        }
+      });
+      
+      // 新增下级区域按钮点击事件
+      $('#addSubRegionBtn').click(function() {
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        // 重置表单
+        $('#regionForm')[0].reset();
+        $('#regionId').val('');
+        $('#parentId').val(selectedNode.id);
+        const nodeText = selectedNode.text.replace(/<[^>]*>/g, '').trim();
+        $('#regionModalTitle').text(`新增下级区域 - ${nodeText}`);
+        
+        // 根据父节点类型设置可新增的区域类型
+        const parentType = selectedNode.type;
+        let options = '';
+        switch(parentType) {
+          case 'city':
+            // 城市下可新增街道（城市）或乡镇（农村）
+            options = `
+              <option value="street">街道（城市一级）</option>
+              <option value="township">乡镇（农村一级）</option>
+            `;
+            break;
+          case 'street':
+            // 街道下只能新增社区
+            options = `<option value="community">社区（城市二级）</option>`;
+            break;
+          case 'community':
+            // 社区下只能新增小区
+            options = `<option value="residence">小区（城市三级-可设地标）</option>`;
+            break;
+          case 'township':
+            // 乡镇下只能新增村屯
+            options = `<option value="village">村屯（农村二级）</option>`;
+            break;
+          case 'village':
+            // 村屯下只能新增自然村
+            options = `<option value="natural_village">自然村（农村三级-可设地标）</option>`;
+            break;
+          case 'residence':
+          case 'natural_village':
+            // 最小区域不能新增下级
+            alert('该区域已为最小层级，无法新增下级区域。最小区域可以设置导航地标。');
+            return;
+          default:
+            alert('该区域类型不支持新增下级区域');
+            return;
+        }
+        $('#regionType').html(options);
+        $('#regionType').prop('disabled', false);
+        
+        // 显示弹窗
+        $('#regionModal').modal('show');
+      });
+      
+      // 编辑区域按钮点击事件
+      $('#editRegionBtn').click(function() {
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        // 填充表单数据（移除HTML标签）
+        const nodeText = selectedNode.text.replace(/<[^>]*>/g, '').trim();
+        $('#regionId').val(selectedNode.id);
+        $('#parentId').val(selectedNode.parentId || '');
+        $('#regionName').val(nodeText);
+        $('#regionModalTitle').text(`编辑区域 - ${nodeText}`);
+        
+        // 设置区域类型（不可修改）
+        let typeText = '';
+        switch(selectedNode.type) {
+          case 'city': typeText = '城市'; break;
+          case 'street': typeText = '街道（城市一级）'; break;
+          case 'community': typeText = '社区（城市二级）'; break;
+          case 'residence': typeText = '小区（城市三级-可设地标）'; break;
+          case 'township': typeText = '乡镇（农村一级）'; break;
+          case 'village': typeText = '村屯（农村二级）'; break;
+          case 'natural_village': typeText = '自然村（农村三级-可设地标）'; break;
+        }
+        $('#regionType').html(`<option value="${selectedNode.type}">${typeText}</option>`);
+        $('#regionType').prop('disabled', true);
+        
+        // 显示弹窗
+        $('#regionModal').modal('show');
+      });
+      
+      // 删除区域按钮点击事件
+      $('#deleteRegionBtn').click(function() {
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        // 检查是否有下级节点
+        if (selectedNode.nodes && selectedNode.nodes.length > 0) {
+          alert('无法删除，请先删除下级区域');
+          return;
+        }
+        
+        // 检查是否已关联服务对象（模拟）
+        if (selectedNode.hasServiceObjects) {
+          alert('无法删除，该区域已关联服务对象，请先转移服务对象');
+          return;
+        }
+        
+        const nodeText = selectedNode.text.replace(/<[^>]*>/g, '').trim();
+        if (confirm(`确定要删除区域"${nodeText}"吗？\n\n删除后将无法恢复，请谨慎操作。`)) {
+          // 模拟删除操作
+          alert(`区域"${nodeText}"已成功删除`);
+          // 重新加载树形结构
+          initRegionTree();
+          // 清空选中状态
+          $('#no-selection').show();
+          $('#region-operations').hide();
+          $('#no-landmark').show();
+          $('#landmark-list').hide();
+        }
+      });
+      
+      // 新增地标按钮点击事件
+      $('#addLandmarkBtn').click(function() {
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        // 填充地标弹窗数据
+        $('#landmarkId').val('');
+        $('#landmarkRegionId').val(selectedNode.id);
+        $('#landmarkRegionName').text(selectedNode.text);
+        $('#landmarkModalTitle').text(`新增地标 - ${selectedNode.text}`);
+        
+        // 重置表单（两个标签页都重置）
+        $('#landmarkForm')[0].reset();
+        $('#manualLandmarkName').val('');
+        $('#mapLandmarkName').val('');
+        $('#manualLongitude').val('');
+        $('#manualLatitude').val('');
+        $('#manualRelativePosition').val('');
+        $('#mapRelativePosition').val('');
+        
+        // 清除地图标记和状态
+        $('#mapSimulator .map-marker').remove();
+        $('#mapSimulator').removeClass('has-marker');
+        $('#mapCoords').hide();
+        $('#displayLongitude').text('-');
+        $('#displayLatitude').text('-');
+        
+        // 默认显示地图标注标签页
+        $('#map-marker-tab').tab('show');
+        
+        // 显示弹窗
+        $('#landmarkModal').modal('show');
+      });
+      
+      // 地图模拟点击事件
+      $('#mapSimulator').off('click').on('click', function(e) {
+        // 如果点击的是标记，不处理
+        if ($(e.target).closest('.map-marker').length > 0) {
+          return;
+        }
+        
+        // 获取点击位置相对于地图的坐标
+        const $map = $(this);
+        const mapOffset = $map.offset();
+        const mapWidth = $map.width();
+        const mapHeight = $map.height();
+        const x = e.pageX - mapOffset.left;
+        const y = e.pageY - mapOffset.top;
+        
+        // 生成随机经纬度（模拟真实地图获取）
+        // 经度范围：116.4-116.5，纬度范围：39.9-40.0
+        const longitude = (116.4 + (x / mapWidth) * 0.1).toFixed(6);
+        const latitude = (40.0 - (y / mapHeight) * 0.1).toFixed(6);
+        
+        // 添加地图标记
+        addMapMarker(longitude, latitude, x, y);
+        
+        // 同步到手动输入框和地图标注输入框
+        $('#manualLongitude').val(longitude);
+        $('#manualLatitude').val(latitude);
+        $('#displayLongitude').text(longitude);
+        $('#displayLatitude').text(latitude);
+        $('#mapCoords').show();
+        
+        // 自动生成地标名称（如果还没有输入）
+        const selectedNode = getSelectedNode();
+        if (selectedNode && !$('#mapLandmarkName').val()) {
+          const landmarkName = `${selectedNode.text.replace(/<[^>]*>/g, '')}入口`;
+          $('#manualLandmarkName').val(landmarkName);
+          $('#mapLandmarkName').val(landmarkName);
+        }
+        
+        // 更新地图状态
+        $map.addClass('has-marker');
+      });
+      
+      // 标签页切换时同步数据
+      $('#landmarkTab button').on('shown.bs.tab', function(e) {
+        const target = $(e.target).attr('data-bs-target');
+        if (target === '#map-marker') {
+          // 从手动输入同步到地图标注
+          const longitude = $('#manualLongitude').val();
+          const latitude = $('#manualLatitude').val();
+          const landmarkName = $('#manualLandmarkName').val();
+          const relativePosition = $('#manualRelativePosition').val();
+          
+          // 同步地标名称和相对位置
+          if (landmarkName) {
+            $('#mapLandmarkName').val(landmarkName);
+          }
+          if (relativePosition) {
+            $('#mapRelativePosition').val(relativePosition);
+          }
+          
+          // 如果有经纬度，在地图上显示标记
+          if (longitude && latitude) {
+            const mapWidth = $('#mapSimulator').width();
+            const mapHeight = $('#mapSimulator').height();
+            const x = ((parseFloat(longitude) - 116.4) / 0.1) * mapWidth;
+            const y = ((40.0 - parseFloat(latitude)) / 0.1) * mapHeight;
+            addMapMarker(longitude, latitude, x, y);
+            $('#mapCoords').show();
+            $('#displayLongitude').text(longitude);
+            $('#displayLatitude').text(latitude);
+          }
+        } else if (target === '#manual-input') {
+          // 从地图标注同步到手动输入
+          const longitude = $('#displayLongitude').text();
+          const latitude = $('#displayLatitude').text();
+          const landmarkName = $('#mapLandmarkName').val();
+          const relativePosition = $('#mapRelativePosition').val();
+          
+          // 同步地标名称和相对位置
+          if (landmarkName) {
+            $('#manualLandmarkName').val(landmarkName);
+          }
+          if (relativePosition) {
+            $('#manualRelativePosition').val(relativePosition);
+          }
+          
+          // 同步经纬度
+          if (longitude !== '-' && latitude !== '-') {
+            $('#manualLongitude').val(longitude);
+            $('#manualLatitude').val(latitude);
+          }
+        }
+      });
+      
+      // 地标名称输入框同步
+      $('#mapLandmarkName, #manualLandmarkName').on('input', function() {
+        const value = $(this).val();
+        if ($(this).attr('id') === 'mapLandmarkName') {
+          $('#manualLandmarkName').val(value);
+        } else {
+          $('#mapLandmarkName').val(value);
+        }
+      });
+      
+      // 相对位置输入框同步
+      $('#mapRelativePosition, #manualRelativePosition').on('input', function() {
+        const value = $(this).val();
+        if ($(this).attr('id') === 'mapRelativePosition') {
+          $('#manualRelativePosition').val(value);
+        } else {
+          $('#mapRelativePosition').val(value);
+        }
+      });
+      
+      // 设置地标按钮点击事件（与新增地标按钮功能相同）
+      $('#setLandmarkBtn').click(function() {
+        $('#addLandmarkBtn').click();
+      });
+      
+      // 保存地标按钮点击事件
+      $('#saveLandmarkBtn').click(function() {
+        const landmarkId = $('#landmarkId').val();
+        const regionId = $('#landmarkRegionId').val();
+        
+        // 获取地标名称（两个标签页已同步，任意获取一个）
+        let landmarkName = $('#mapLandmarkName').val().trim() || $('#manualLandmarkName').val().trim();
+        let relativePosition = $('#mapRelativePosition').val().trim() || $('#manualRelativePosition').val().trim();
+        
+        // 获取经纬度（优先从地图标注获取，否则从手动输入获取）
+        let longitude = $('#displayLongitude').text();
+        let latitude = $('#displayLatitude').text();
+        if (longitude === '-' || latitude === '-') {
+          longitude = $('#manualLongitude').val().trim();
+          latitude = $('#manualLatitude').val().trim();
+        }
+        
+        // 校验必填项
+        if (!landmarkName) {
+          alert('请输入地标名称');
+          return;
+        }
+        if (!longitude || !latitude) {
+          alert('请在地图上标记位置或手动输入经纬度');
+          return;
+        }
+        if (!/^-?\d+\.?\d*$/.test(longitude) || !/^-?\d+\.?\d*$/.test(latitude)) {
+          alert('经纬度格式不正确，请输入数字格式（如116.481028）');
+          return;
+        }
+        
+        // 模拟保存地标
+        const action = landmarkId ? '更新' : '新增';
+        alert(`地标"${landmarkName}"已成功${action}`);
+        
+        // 更新树形结构中的地标信息
+        const selectedNode = getSelectedNode();
+        if (selectedNode) {
+          if (!selectedNode.landmarks) {
+            selectedNode.landmarks = [];
+          }
+          
+          const landmark = {
+            id: landmarkId || Date.now().toString(),
+            name: landmarkName,
+            longitude: longitude,
+            latitude: latitude,
+            relativePosition: relativePosition || ''
+          };
+          
+          if (landmarkId) {
+            // 更新现有地标
+            const index = selectedNode.landmarks.findIndex(l => l.id === landmarkId);
+            if (index !== -1) {
+              selectedNode.landmarks[index] = landmark;
+            }
+          } else {
+            // 新增地标
+            selectedNode.landmarks.push(landmark);
+          }
+          
+          // 刷新地标列表显示
+          renderLandmarkCards(selectedNode.landmarks);
+        }
+        
+        // 关闭弹窗
+        $('#landmarkModal').modal('hide');
+      });
+      
+      // 新增特别关注区域按钮点击事件
+      $('#addSpecialRegionBtn').click(function() {
+        // 重置表单
+        $('#specialRegionForm')[0].reset();
+        $('#specialRegionId').val('');
+        $('#specialRegionName').val('');
+        $('#specialRegionModalTitle').text('新增特别关注区域');
+        
+        // 重置特别关注区域树形结构（取消所有勾选）
+        $('#specialRegionTree').treeview('uncheckAll', { silent: true });
+        
+        // 重置已选区域列表
+        $('#no-selected-regions').show();
+        $('#selectedRegionsList').hide().empty();
+        
+        // 显示弹窗
+        $('#specialRegionModal').modal('show');
+      });
+      
+      // 编辑特别关注区域按钮点击事件（使用事件委托）
+      $(document).on('click', '.edit-special-region-btn', function() {
+        const regionId = $(this).data('id');
+        // 模拟获取特别关注区域数据
+        const regionData = {
+          id: regionId,
+          name: regionId === 1 ? '西部偏远山区' : '东部沿海新区',
+          selectedRegions: regionId === 1 ? [
+            { id: '13', text: '正定村', type: 'village' },
+            { id: '17', text: '鹿泉村', type: 'village' }
+          ] : [
+            { id: '3', text: '建国路社区', type: 'community' },
+            { id: '6', text: '光华路社区', type: 'community' }
+          ]
+        };
+        
+        // 填充表单数据
+        $('#specialRegionId').val(regionData.id);
+        $('#specialRegionName').val(regionData.name);
+        $('#specialRegionModalTitle').text(`编辑特别关注区域 - ${regionData.name}`);
+        
+        // 重置特别关注区域树形结构
+        $('#specialRegionTree').treeview('uncheckAll', { silent: true });
+        
+        // 勾选已选区域
+        regionData.selectedRegions.forEach(region => {
+          const nodes = $('#specialRegionTree').treeview('search', [region.text, { ignoreCase: true, exactMatch: true }]);
+          if (nodes.length > 0) {
+            $('#specialRegionTree').treeview('checkNode', [nodes[0].nodeId, { silent: true }]);
+          }
+        });
+        
+        // 显示已选区域列表
+        const checkedNodes = $('#specialRegionTree').treeview('getChecked');
+        renderSelectedRegions(checkedNodes);
+        
+        // 显示弹窗
+        $('#specialRegionModal').modal('show');
+      });
+      
+      // 删除特别关注区域按钮点击事件（使用事件委托）
+      $(document).on('click', '.delete-special-region-btn', function() {
+        const regionId = $(this).data('id');
+        const $row = $(this).closest('tr');
+        const regionName = $row.find('td.text-left strong').text() || $row.find('td.text-left').text().split('\n')[0];
+        
+        // 检查是否有关联的服务数据（模拟）
+        const hasServiceData = Math.random() > 0.5; // 模拟检查
+        
+        if (hasServiceData) {
+          alert(`无法删除，特别关注区域"${regionName}"已关联服务数据，请先处理相关数据后再删除。`);
+          return;
+        }
+        
+        if (confirm(`确定要删除特别关注区域"${regionName}"吗？\n\n注意：删除后该区域的统计数据将不再单独显示，且无法恢复。`)) {
+          // 模拟删除操作
+          alert(`特别关注区域"${regionName}"已成功删除`);
+          // 移除该行
+          $row.remove();
+          // 重新加载特别关注区域列表
+          checkSpecialRegionData();
+        }
+      });
+      
+      // 保存特别关注区域按钮点击事件
+      $('#saveSpecialRegionBtn').click(function() {
+        const regionName = $('#specialRegionName').val().trim();
+        const selectedNodes = $('#specialRegionTree').treeview('getChecked');
+        
+        // 校验必填项
+        if (!regionName) {
+          alert('请输入特别关注区域名称');
+          return;
+        }
+        if (selectedNodes.length === 0) {
+          alert('请至少选择一个行政区域');
+          return;
+        }
+        
+        // 模拟保存特别关注区域
+        const regionId = $('#specialRegionId').val() || Math.floor(Math.random() * 1000);
+        alert(`特别关注区域"${regionName}"已成功保存`);
+        
+        // 关闭弹窗
+        $('#specialRegionModal').modal('hide');
+        
+        // 重新加载特别关注区域列表（模拟）
+        checkSpecialRegionData();
+      });
+      
+      // 保存区域按钮点击事件
+      $('#saveRegionBtn').click(function() {
+        const regionName = $('#regionName').val().trim();
+        const regionType = $('#regionType').val();
+        
+        // 校验必填项
+        if (!regionName) {
+          alert('请输入区域名称');
+          return;
+        }
+        if (!regionType) {
+          alert('请选择区域类型');
+          return;
+        }
+        
+        // 模拟保存区域
+        const regionId = $('#regionId').val() || Math.floor(Math.random() * 1000);
+        const parentId = $('#parentId').val();
+        alert(`区域"${regionName}"已成功保存`);
+        
+        // 关闭弹窗
+        $('#regionModal').modal('hide');
+        
+        // 重新加载树形结构
+        initRegionTree();
+      });
+    });
+
+    
+    // 初始化行政区划树形结构
+    function initRegionTree() {
+      // 模拟行政区划数据（三级结构，支持多地标）
+      const regionData = [
+        {
+          id: '1',
+          text: '北京市',
+          type: 'city',
+          hasServiceObjects: false,
+          nodes: [
+            {
+              id: '2',
+              text: '朝阳区（街道）',
+              type: 'street',
+              hasServiceObjects: true,
+              nodes: [
+                {
+                  id: '3',
+                  text: '建国路社区',
+                  type: 'community',
+                  hasServiceObjects: false,
+                  nodes: [
+                    {
+                      id: '4',
+                      text: 'XX小区',
+                      type: 'residence',
+                      hasServiceObjects: true,
+                      landmarks: [
+                        {
+                          id: 'lm1',
+                          name: 'XX小区东门',
+                          longitude: '116.481028',
+                          latitude: '39.921983',
+                          relativePosition: '距离XX公交站100米，地铁1号线建国路站C口出'
+                        },
+                        {
+                          id: 'lm2',
+                          name: 'XX小区南门',
+                          longitude: '116.481128',
+                          latitude: '39.921883',
+                          relativePosition: '距离XX商场200米，公交XX路站旁'
+                        }
+                      ]
+                    },
+                    {
+                      id: '5',
+                      text: 'YY小区',
+                      type: 'residence',
+                      hasServiceObjects: false
+                    }
+                  ]
+                },
+                {
+                  id: '6',
+                  text: '光华路社区',
+                  type: 'community',
+                  hasServiceObjects: false
+                }
+              ]
+            },
+            {
+              id: '7',
+              text: '海淀区（街道）',
+              type: 'street',
+              hasServiceObjects: false,
+              nodes: [
+                {
+                  id: '8',
+                  text: '中关村社区',
+                  type: 'community',
+                  hasServiceObjects: true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: '9',
+          text: '河北省',
+          type: 'city',
+          hasServiceObjects: false,
+          nodes: [
+            {
+              id: '10',
+              text: '青山镇（乡镇）',
+              type: 'township',
+              hasServiceObjects: false,
+              nodes: [
+                {
+                  id: '11',
+                  text: '正定村',
+                  type: 'village',
+                  hasServiceObjects: true,
+                  nodes: [
+                    {
+                      id: '12',
+                      text: '东村',
+                      type: 'natural_village',
+                      hasServiceObjects: false,
+                      landmarks: [
+                        {
+                          id: 'lm3',
+                          name: '东村村委会',
+                          longitude: '114.581028',
+                          latitude: '38.021983',
+                          relativePosition: '距离正定县城5公里，村东头十字路口向北100米'
+                        }
+                      ]
+                    },
+                    {
+                      id: '13',
+                      text: '西村',
+                      type: 'natural_village',
+                      hasServiceObjects: false
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ];
+      
+      // 为树形数据添加图标和标识
+      function addIconsToTreeData(data) {
+        return data.map(node => {
+          let icon = '';
+          switch(node.type) {
+            case 'city': icon = '<i class="fa fa-building node-icon"></i>'; break;
+            case 'street': icon = '<i class="fa fa-road node-icon"></i>'; break;
+            case 'community': icon = '<i class="fa fa-home node-icon"></i>'; break;
+            case 'residence': icon = '<i class="fa fa-building-o node-icon"></i>'; break;
+            case 'township': icon = '<i class="fa fa-map-marker node-icon"></i>'; break;
+            case 'village': icon = '<i class="fa fa-tree node-icon"></i>'; break;
+            case 'natural_village': icon = '<i class="fa fa-leaf node-icon"></i>'; break;
+          }
+          
+          // 构建节点文本（包含图标和地标数量）
+          let nodeText = icon + node.text;
+          if (node.landmarks && node.landmarks.length > 0) {
+            nodeText += `<span class="node-badge">${node.landmarks.length}个地标</span>`;
+          }
+          
+          const newNode = {
+            ...node,
+            text: nodeText
+          };
+          
+          // 递归处理子节点
+          if (node.nodes && node.nodes.length > 0) {
+            newNode.nodes = addIconsToTreeData(node.nodes);
+          }
+          
+          return newNode;
+        });
+      }
+      
+      const treeDataWithIcons = addIconsToTreeData(regionData);
+      
+      // 初始化树形结构
+      $('#regionTree').treeview({
+        data: treeDataWithIcons,
+        levels: 3,
+        showCheckbox: false,
+        showIcon: false,
+        expandIcon: 'fa fa-chevron-right',
+        collapseIcon: 'fa fa-chevron-down',
+        onNodeSelected: function(event, node) {
+          // 更新操作区显示
+          $('#no-selection').hide();
+          $('#region-operations').show();
+          
+          // 更新区域信息（移除HTML标签）
+          const nodeText = node.text.replace(/<[^>]*>/g, '').trim();
+          $('#currentRegionName').text(nodeText);
+          
+          // 设置区域类型文本和图标
+          let typeText = '';
+          let typeIcon = '';
+          switch(node.type) {
+            case 'city': 
+              typeText = '城市'; 
+              typeIcon = '<i class="fa fa-building"></i>';
+              break;
+            case 'street': 
+              typeText = '街道（城市一级）'; 
+              typeIcon = '<i class="fa fa-road"></i>';
+              break;
+            case 'community': 
+              typeText = '社区（城市二级）'; 
+              typeIcon = '<i class="fa fa-home"></i>';
+              break;
+            case 'residence': 
+              typeText = '小区（城市三级-可设地标）'; 
+              typeIcon = '<i class="fa fa-building-o"></i>';
+              break;
+            case 'township': 
+              typeText = '乡镇（农村一级）'; 
+              typeIcon = '<i class="fa fa-map-marker"></i>';
+              break;
+            case 'village': 
+              typeText = '村屯（农村二级）'; 
+              typeIcon = '<i class="fa fa-tree"></i>';
+              break;
+            case 'natural_village': 
+              typeText = '自然村（农村三级-可设地标）'; 
+              typeIcon = '<i class="fa fa-leaf"></i>';
+              break;
+          }
+          $('#currentRegionType').html(typeIcon + ' ' + typeText);
+          
+          // 存储当前选中节点
+          window.currentSelectedNode = node;
+          
+          // 构建完整路径
+          const path = buildRegionPath(node);
+          if (path) {
+            $('#regionPathItem').show();
+            $('#currentRegionPath').text(path);
+          } else {
+            $('#regionPathItem').hide();
+          }
+          
+          // 判断是否为最小区域（可设地标）
+          const isMinRegion = node.type === 'residence' || node.type === 'natural_village';
+          
+          // 显示/隐藏设置地标按钮
+          $('#setLandmarkBtn').toggle(isMinRegion);
+          $('#addLandmarkBtn').toggle(isMinRegion);
+          
+          // 更新操作提示
+          let operationHint = '';
+          if (isMinRegion) {
+            operationHint = '该区域为最小区域，可以设置导航地标';
+          } else if (node.type === 'city') {
+            operationHint = '城市下可新增街道（城市）或乡镇（农村）';
+          } else if (node.type === 'street') {
+            operationHint = '街道下可新增社区';
+          } else if (node.type === 'community') {
+            operationHint = '社区下可新增小区';
+          } else if (node.type === 'township') {
+            operationHint = '乡镇下可新增村屯';
+          } else if (node.type === 'village') {
+            operationHint = '村屯下可新增自然村';
+          }
+          $('#operationHint').html('<i class="fa fa-lightbulb-o"></i> ' + operationHint);
+          
+          // 更新地标信息区
+          if (isMinRegion) {
+            $('#no-landmark').hide();
+            $('#landmark-list').show();
+            
+            // 渲染地标列表
+            if (node.landmarks && node.landmarks.length > 0) {
+              renderLandmarkCards(node.landmarks);
+              $('#no-landmarks-yet').hide();
+            } else {
+              $('#landmarkCardsContainer').empty();
+              $('#no-landmarks-yet').show();
+            }
+          } else {
+            $('#no-landmark').show();
+            $('#landmark-list').hide();
+          }
+          
+          // 更新删除按钮状态和提示
+          let deleteHint = '';
+          let canDelete = true;
+          if (node.nodes && node.nodes.length > 0) {
+            canDelete = false;
+            deleteHint = '无法删除，请先删除下级区域';
+          } else if (node.hasServiceObjects) {
+            canDelete = false;
+            deleteHint = '无法删除，该区域已关联服务对象，请先转移服务对象';
+          } else {
+            deleteHint = '删除该区域';
+          }
+          
+          $('#deleteRegionBtn').prop('disabled', !canDelete);
+          $('#deleteRegionBtn').attr('data-hint', deleteHint);
+          if (!canDelete) {
+            $('#deleteRegionBtn').addClass('opacity-50');
+          } else {
+            $('#deleteRegionBtn').removeClass('opacity-50');
+          }
+          
+          // 更新新增下级按钮状态
+          const canAddSub = !isMinRegion;
+          $('#addSubRegionBtn').prop('disabled', !canAddSub);
+          if (!canAddSub) {
+            $('#addSubRegionBtn').addClass('opacity-50');
+          } else {
+            $('#addSubRegionBtn').removeClass('opacity-50');
+          }
+        }
+      });
+    }
+    
+    // 初始化特别关注区域树形结构（用于弹窗）
+    function initSpecialRegionTree() {
+      // 模拟行政区划数据（全量，包含三级结构）
+      const regionData = [
+        {
+          id: '1',
+          text: '北京市',
+          type: 'city',
+          nodes: [
+            {
+              id: '2',
+              text: '朝阳区（街道）',
+              type: 'street',
+              nodes: [
+                { 
+                  id: '3', 
+                  text: '建国路社区', 
+                  type: 'community',
+                  nodes: [
+                    { id: '4', text: 'XX小区', type: 'residence' },
+                    { id: '5', text: 'YY小区', type: 'residence' }
+                  ]
+                },
+                { 
+                  id: '6', 
+                  text: '光华路社区', 
+                  type: 'community',
+                  nodes: [
+                    { id: '7', text: 'ZZ小区', type: 'residence' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: '8',
+              text: '海淀区（街道）',
+              type: 'street',
+              nodes: [
+                { 
+                  id: '9', 
+                  text: '中关村社区', 
+                  type: 'community',
+                  nodes: [
+                    { id: '10', text: 'AA小区', type: 'residence' }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          id: '11',
+          text: '河北省',
+          type: 'city',
+          nodes: [
+            {
+              id: '12',
+              text: '青山镇（乡镇）',
+              type: 'township',
+              nodes: [
+                { 
+                  id: '13', 
+                  text: '正定村', 
+                  type: 'village',
+                  nodes: [
+                    { id: '14', text: '东村', type: 'natural_village' },
+                    { id: '15', text: '西村', type: 'natural_village' }
+                  ]
+                }
+              ]
+            },
+            {
+              id: '16',
+              text: '绿水镇（乡镇）',
+              type: 'township',
+              nodes: [
+                { 
+                  id: '17', 
+                  text: '鹿泉村', 
+                  type: 'village',
+                  nodes: [
+                    { id: '18', text: '南村', type: 'natural_village' }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ];
+      
+      // 初始化树形结构
+      $('#specialRegionTree').treeview({
+        data: regionData,
+        levels: 3,
+        showCheckbox: true,
+        showIcon: false,
+        multiSelect: true,
+        onNodeChecked: function(event, node) {
+          // 允许选择任意级别的行政区域
+          // 更新已选区域列表
+          const checkedNodes = $('#specialRegionTree').treeview('getChecked');
+          renderSelectedRegions(checkedNodes);
+        },
+        onNodeUnchecked: function(event, node) {
+          // 更新已选区域列表
+          const checkedNodes = $('#specialRegionTree').treeview('getChecked');
+          renderSelectedRegions(checkedNodes);
+        }
+      });
+    }
+    
+    // 渲染地标卡片列表
+    function renderLandmarkCards(landmarks) {
+      const $container = $('#landmarkCardsContainer').empty();
+      
+      if (!landmarks || landmarks.length === 0) {
+        $('#no-landmarks-yet').show();
+        return;
+      }
+      
+      $('#no-landmarks-yet').hide();
+      
+      landmarks.forEach((landmark, index) => {
+        const $card = $('<div class="landmark-card"></div>');
+        
+        // 卡片头部
+        const $header = $('<div class="landmark-card-header"></div>');
+        $header.append(`<div class="landmark-card-title"><i class="fa fa-map-marker text-danger"></i> ${landmark.name}</div>`);
+        $header.append(`<span class="badge bg-primary">地标 ${index + 1}</span>`);
+        $card.append($header);
+        
+        // 卡片内容
+        const $body = $('<div class="landmark-card-body"></div>');
+        $body.append(`
+          <div class="landmark-info-row">
+            <span class="landmark-info-label">经度：</span>
+            <span class="landmark-info-value">${landmark.longitude}</span>
+          </div>
+          <div class="landmark-info-row">
+            <span class="landmark-info-label">纬度：</span>
+            <span class="landmark-info-value">${landmark.latitude}</span>
+          </div>
+        `);
+        if (landmark.relativePosition) {
+          $body.append(`
+            <div class="landmark-info-row">
+              <span class="landmark-info-label">相对位置：</span>
+              <span class="landmark-info-value">${landmark.relativePosition}</span>
+            </div>
+          `);
+        }
+        $card.append($body);
+        
+        // 操作按钮
+        const $actions = $('<div class="landmark-actions"></div>');
+        $actions.append(`
+            <button class="btn btn-sm btn-outline-secondary edit-landmark-btn" data-id="${landmark.id}">
+              <i class="fa fa-pencil"></i> 编辑
+            </button>
+            <button class="btn btn-sm btn-danger delete-landmark-btn" data-id="${landmark.id}">
+              <i class="fa fa-trash"></i> 删除
+            </button>
+        `);
+        $card.append($actions);
+        
+        $container.append($card);
+      });
+      
+      // 绑定编辑地标按钮事件
+      $('.edit-landmark-btn').off('click').on('click', function() {
+        const landmarkId = $(this).data('id');
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        const landmark = selectedNode.landmarks.find(l => l.id === landmarkId);
+        if (!landmark) return;
+        
+        // 填充地标弹窗数据
+        $('#landmarkId').val(landmark.id);
+        $('#landmarkRegionId').val(selectedNode.id);
+        $('#landmarkRegionName').text(selectedNode.text);
+        $('#landmarkModalTitle').text(`编辑地标 - ${selectedNode.text}`);
+        
+        // 填充表单（两个标签页都填充）
+        $('#manualLandmarkName').val(landmark.name);
+        $('#mapLandmarkName').val(landmark.name);
+        $('#manualLongitude').val(landmark.longitude);
+        $('#manualLatitude').val(landmark.latitude);
+        $('#manualRelativePosition').val(landmark.relativePosition || '');
+        $('#mapRelativePosition').val(landmark.relativePosition || '');
+        
+        // 清除地图标记
+        $('#mapSimulator .map-marker').remove();
+        $('#mapSimulator').removeClass('has-marker');
+        $('#mapCoords').hide();
+        
+        // 在地图上添加标记
+        const mapWidth = $('#mapSimulator').width();
+        const mapHeight = $('#mapSimulator').height();
+        const x = ((parseFloat(landmark.longitude) - 116.4) / 0.1) * mapWidth;
+        const y = ((40.0 - parseFloat(landmark.latitude)) / 0.1) * mapHeight;
+        addMapMarker(landmark.longitude, landmark.latitude, x, y);
+        $('#mapSimulator').addClass('has-marker');
+        $('#mapCoords').show();
+        $('#displayLongitude').text(landmark.longitude);
+        $('#displayLatitude').text(landmark.latitude);
+        
+        // 默认显示地图标注标签页
+        $('#map-marker-tab').tab('show');
+        
+        // 显示弹窗
+        $('#landmarkModal').modal('show');
+      });
+      
+      // 绑定删除地标按钮事件
+      $('.delete-landmark-btn').off('click').on('click', function() {
+        const landmarkId = $(this).data('id');
+        const selectedNode = getSelectedNode();
+        if (!selectedNode) return;
+        
+        const landmark = selectedNode.landmarks.find(l => l.id === landmarkId);
+        if (!landmark) return;
+        
+        if (confirm(`确定要删除地标"${landmark.name}"吗？`)) {
+          // 从数组中移除
+          selectedNode.landmarks = selectedNode.landmarks.filter(l => l.id !== landmarkId);
+          
+          // 重新渲染列表
+          renderLandmarkCards(selectedNode.landmarks);
+          
+          alert(`地标"${landmark.name}"已成功删除`);
+        }
+      });
+    }
+    
+    // 渲染已选区域列表
+    function renderSelectedRegions(regions) {
+      // 更新选中数量
+      $('#selectedCount').text(regions.length);
+      
+      if (regions.length === 0) {
+        $('#no-selected-regions').show();
+        $('#selectedRegionsList').hide().empty();
+        return;
+      }
+      
+      $('#no-selected-regions').hide();
+      const $list = $('#selectedRegionsList').show().empty();
+      
+      // 按类型分组显示
+      const groupedRegions = {};
+      regions.forEach(region => {
+        // 获取区域类型标签和颜色
+        let typeLabel = '';
+        let badgeClass = 'bg-primary';
+        switch(region.type) {
+          case 'street': typeLabel = '街道'; badgeClass = 'bg-info'; break;
+          case 'community': typeLabel = '社区'; badgeClass = 'bg-success'; break;
+          case 'residence': typeLabel = '小区'; badgeClass = 'bg-warning'; break;
+          case 'township': typeLabel = '乡镇'; badgeClass = 'bg-info'; break;
+          case 'village': typeLabel = '村屯'; badgeClass = 'bg-success'; break;
+          case 'natural_village': typeLabel = '自然村'; badgeClass = 'bg-warning'; break;
+        }
+        
+        if (!groupedRegions[typeLabel]) {
+          groupedRegions[typeLabel] = [];
+        }
+        groupedRegions[typeLabel].push({ ...region, badgeClass });
+      });
+      
+      // 按类型分组渲染
+      Object.keys(groupedRegions).forEach(typeLabel => {
+        const $group = $('<div class="mb-3"></div>');
+        $group.append(`<div class="text-muted mb-2" style="font-size: 12px; font-weight: 600;">
+          <i class="fa fa-tag"></i> ${typeLabel} (${groupedRegions[typeLabel].length}个)
+        </div>`);
+        
+        const $tagsContainer = $('<div class="d-flex flex-wrap gap-2"></div>');
+        
+        groupedRegions[typeLabel].forEach(region => {
+          const $tag = $(`
+            <div class="badge ${region.badgeClass} d-inline-flex align-items-center" 
+                 style="cursor: pointer; padding: 6px 10px; font-size: 12px; border-radius: 4px;">
+              <span>${region.text.replace(/<[^>]*>/g, '')}</span>
+              <i class="fa fa-times ms-2" style="font-size: 11px;"></i>
+            </div>
+          `)
+            .attr('data-node-id', region.nodeId)
+            .attr('title', '点击移除')
+            .hover(
+              function() { $(this).css('opacity', '0.8'); },
+              function() { $(this).css('opacity', '1'); }
+            )
+            .click(function() {
+          // 移除该区域
+          const nodeId = $(this).attr('data-node-id');
+          $('#specialRegionTree').treeview('uncheckNode', [parseInt(nodeId), { silent: true }]);
+          
+          // 重新渲染列表
+          const checkedNodes = $('#specialRegionTree').treeview('getChecked');
+          renderSelectedRegions(checkedNodes);
+        });
+        
+          $tagsContainer.append($tag);
+        });
+        
+        $group.append($tagsContainer);
+        $list.append($group);
+      });
+    }
+    
+    // 清空所有已选区域
+    $('#clearAllRegions').click(function() {
+      if (confirm('确定要清空所有已选区域吗？')) {
+        $('#specialRegionTree').treeview('uncheckAll', { silent: true });
+        const checkedNodes = $('#specialRegionTree').treeview('getChecked');
+        renderSelectedRegions(checkedNodes);
+      }
+    });
+    
+    // 展开/折叠所有节点
+    $('#expandAllRegions').click(function() {
+      const $btn = $(this);
+      const isExpanded = $btn.data('expanded');
+      
+      if (isExpanded) {
+        $('#specialRegionTree').treeview('collapseAll', { silent: true });
+        $btn.html('<i class="fa fa-expand"></i> 全部展开');
+        $btn.data('expanded', false);
+      } else {
+        $('#specialRegionTree').treeview('expandAll', { silent: true });
+        $btn.html('<i class="fa fa-compress"></i> 全部折叠');
+        $btn.data('expanded', true);
+      }
+    });
+    
+    // 获取当前选中的树形节点
+    function getSelectedNode() {
+      const selectedNodes = $('#regionTree').treeview('getSelected');
+      return selectedNodes.length > 0 ? selectedNodes[0] : null;
+    }
+    
+    // 在地图上添加标记
+    function addMapMarker(longitude, latitude, x, y) {
+      // 移除现有标记
+      $('#mapSimulator .map-marker').remove();
+      
+      const $map = $('#mapSimulator');
+      const mapWidth = $map.width();
+      const mapHeight = $map.height();
+      
+      // 如果没有提供坐标，则根据经纬度计算
+      if (x === undefined || y === undefined) {
+      // 经度范围：116.4-116.5，纬度范围：39.9-40.0
+        x = ((parseFloat(longitude) - 116.4) / 0.1) * mapWidth;
+        y = ((40.0 - parseFloat(latitude)) / 0.1) * mapHeight;
+      }
+      
+      // 确保坐标在范围内
+      x = Math.max(0, Math.min(mapWidth - 32, x));
+      y = Math.max(0, Math.min(mapHeight - 32, y));
+      
+      // 添加标记
+      const $marker = $('<div class="map-marker" title="拖动调整位置"></div>')
+        .css({ left: `${x}px`, top: `${y}px` })
+        .draggable({
+          containment: '#mapSimulator',
+          stop: function(event, ui) {
+            // 拖动结束后更新经纬度
+            const newX = ui.position.left;
+            const newY = ui.position.top;
+            const newLongitude = (116.4 + (newX / mapWidth) * 0.1).toFixed(6);
+            const newLatitude = (40.0 - (newY / mapHeight) * 0.1).toFixed(6);
+            
+            // 同步到所有输入框
+            $('#manualLongitude').val(newLongitude);
+            $('#manualLatitude').val(newLatitude);
+            $('#displayLongitude').text(newLongitude);
+            $('#displayLatitude').text(newLatitude);
+          }
+        });
+      
+      $map.append($marker);
+      $map.addClass('has-marker');
+    }
+    
+    // 构建区域完整路径
+    function buildRegionPath(node) {
+      if (!node) return '';
+      
+      // 从树形结构中查找完整路径
+      function findPathInTree(treeData, targetId, currentPath) {
+        for (let i = 0; i < treeData.length; i++) {
+          const item = treeData[i];
+          const newPath = [...currentPath, item.text.replace(/<[^>]*>/g, '')]; // 移除HTML标签
+          
+          if (item.id === targetId) {
+            return newPath;
+          }
+          
+          if (item.nodes && item.nodes.length > 0) {
+            const found = findPathInTree(item.nodes, targetId, newPath);
+            if (found) return found;
+          }
+        }
+        return null;
+      }
+      
+      // 获取原始树数据（不包含图标）
+      const originalData = [
+        {
+          id: '1', text: '北京市', type: 'city',
+          nodes: [
+            {
+              id: '2', text: '朝阳区（街道）', type: 'street',
+              nodes: [
+                {
+                  id: '3', text: '建国路社区', type: 'community',
+                  nodes: [
+                    { id: '4', text: 'XX小区', type: 'residence' },
+                    { id: '5', text: 'YY小区', type: 'residence' }
+                  ]
+                },
+                { id: '6', text: '光华路社区', type: 'community' }
+              ]
+            },
+            {
+              id: '7', text: '海淀区（街道）', type: 'street',
+              nodes: [
+                { id: '8', text: '中关村社区', type: 'community' }
+              ]
+            }
+          ]
+        },
+        {
+          id: '9', text: '河北省', type: 'city',
+          nodes: [
+            {
+              id: '10', text: '青山镇（乡镇）', type: 'township',
+              nodes: [
+                {
+                  id: '11', text: '正定村', type: 'village',
+                  nodes: [
+                    { id: '12', text: '东村', type: 'natural_village' },
+                    { id: '13', text: '西村', type: 'natural_village' }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ];
+      
+      const path = findPathInTree(originalData, node.id, []);
+      return path ? path.join(' → ') : node.text.replace(/<[^>]*>/g, '');
+    }
+    
+    // 检查特别关注区域数据
+    function checkSpecialRegionData() {
+      // 模拟检查是否有数据
+      const hasData = $('#specialRegionTableBody tr').length > 0;
+      $('#no-special-regions').toggle(!hasData);
+      $('#special-region-table').toggle(hasData);
+    }
+  </script>
+</body>
+</html>
+
