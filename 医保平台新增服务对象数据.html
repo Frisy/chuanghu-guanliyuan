@@ -48,46 +48,60 @@
     .user-name { font-size: 14px; font-weight: 500; }
     
     /* 查询页面专属样式 */
-    .filter-section { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-    .filter-row { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; align-items: flex-end; }
+    .filter-section { background: #fff; padding: 24px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 18px; align-items: flex-end; }
     .filter-row:last-child { margin-bottom: 0; }
-    .filter-item { flex: 1; min-width: 200px; display: flex; align-items: center; }
-    .filter-label { font-weight: 500; margin-right: 10px; white-space: nowrap; min-width: 80px; font-size: 14px; }
-    .form-control, .form-select { border-radius: 6px; border: 1px solid #ddd; font-size: 14px; }
-    .btn-filter { background: #1890FF; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    .btn-filter:hover { background: #096DD9; }
-    .btn-reset { background: #fff; color: #666; border: 1px solid #ddd; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 14px; }
-    .btn-reset:hover { background: #f5f5f5; border-color: #ccc; }
-    .filter-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px; }
+    .filter-item { flex: 1; min-width: 220px; display: flex; align-items: center; flex-wrap: wrap; }
+    .filter-label { font-weight: 500; margin-right: 12px; white-space: nowrap; min-width: 90px; font-size: 14px; color: #333; flex-shrink: 0; }
+    .form-control, .form-select { border-radius: 6px; border: 1px solid #ddd; font-size: 14px; flex: 1; min-width: 120px; height: 36px; padding: 6px 12px; transition: border-color 0.3s; }
+    .form-control:focus, .form-select:focus { border-color: #1890FF; outline: none; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1); }
+    .date-range-group { display: flex; align-items: center; flex: 1; gap: 8px; }
+    .date-range-group .form-control { flex: 0 0 auto; width: 150px; }
+    .date-range-separator { color: #999; font-size: 14px; margin: 0 4px; white-space: nowrap; }
+    .btn-filter { background: #1890FF; color: #fff; border: none; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-filter:hover { background: #096DD9; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3); }
+    .btn-filter:active { transform: translateY(0); }
+    .btn-reset { background: #fff; color: #666; border: 1px solid #ddd; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-reset:hover { background: #f5f5f5; border-color: #1890FF; color: #1890FF; }
+    .filter-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid #f0f0f0; }
     
-    .data-table { background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-    .table-header { background: #f8f9fa; padding: 12px 20px; font-weight: 600; border-bottom: 1px solid #f0f0f0; }
-    .table-responsive { max-height: 400px; overflow-y: auto; }
-    .table th, .table td { vertical-align: middle; padding: 12px 20px; border-bottom: 1px solid #f0f0f0; }
-    .table th { background: #f8f9fa; font-weight: 500; }
-    .table tbody tr:hover { background: #f9f9f9; }
-    .checkbox-all { margin-right: 5px; }
+    .data-table { background: #fff; border-radius: 8px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .table-header { background: #f8f9fa; padding: 16px 20px; font-weight: 600; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; }
+    .table-responsive { max-height: 500px; overflow-y: auto; overflow-x: auto; }
+    .table { margin-bottom: 0; min-width: 100%; white-space: nowrap; }
+    .table th, .table td { vertical-align: middle; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; font-size: 14px; white-space: nowrap; text-overflow: ellipsis; }
+    .table th { background: #f8f9fa; font-weight: 600; color: #333; position: sticky; top: 0; z-index: 10; }
+    .table tbody tr:hover { background: #f5f7fa; transition: background-color 0.2s; }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .checkbox-all { margin-right: 8px; cursor: pointer; }
+    .checkbox-all, input[name="dataItem"] { cursor: pointer; width: 16px; height: 16px; }
     .text-danger { color: #FF4D4F !important; }
-    .badge-warning { background-color: #FFF7E6; color: #FAAD14; padding: 3px 6px; border-radius: 4px; font-size: 12px; }
-    .status-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .badge-warning { background-color: #FFF7E6; color: #FAAD14; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+    .status-badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+    .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 4px; transition: all 0.2s; }
+    .btn-sm:hover { transform: translateY(-1px); }
+    .view-detail-btn { border: 1px solid #d9d9d9; color: #666; }
+    .view-detail-btn:hover { border-color: #1890FF; color: #1890FF; background-color: #f0f7ff; }
     .status-normal { background-color: #E6F7E6; color: #52C41A; }
     .status-pause { background-color: #FFF7E6; color: #FAAD14; }
     .status-transfer { background-color: #E6F7FF; color: #1890FF; }
     .status-death { background-color: #FFE6E6; color: #FF4D4F; }
     
-    .action-section { background: #fff; padding: 15px 20px; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 15px; justify-content: space-between; }
-    .template-selector { flex: 1; min-width: 250px; }
-    .btn-action { padding: 8px 20px; border-radius: 6px; font-weight: 500; cursor: pointer; }
-    .btn-validate { background: #1890FF; color: #fff; border: none; }
-    .btn-validate:hover { background: #096DD9; }
-    .btn-export { background: #52C41A; color: #fff; border: none; }
-    .btn-export:hover { background: #41A819; }
-    .btn-disabled { background: #ccc; cursor: not-allowed; }
-    .btn-disabled:hover { background: #ccc; }
+    .action-section { background: #fff; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .template-selector { flex: 1; min-width: 250px; display: flex; align-items: center; gap: 12px; }
+    .template-selector .filter-label { margin-bottom: 0; }
+    .btn-action { padding: 10px 24px; border-radius: 6px; font-weight: 500; cursor: pointer; font-size: 14px; transition: all 0.3s; display: inline-flex; align-items: center; gap: 6px; border: none; }
+    .btn-validate { background: #1890FF; color: #fff; }
+    .btn-validate:hover { background: #096DD9; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3); }
+    .btn-export { background: #52C41A; color: #fff; }
+    .btn-export:hover { background: #41A819; transform: translateY(-1px); box-shadow: 0 2px 8px rgba(82, 196, 26, 0.3); }
+    .btn-disabled { background: #ccc !important; cursor: not-allowed !important; opacity: 0.6; }
+    .btn-disabled:hover { background: #ccc !important; transform: none !important; box-shadow: none !important; }
+    .action-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
     
     .export-log { margin-top: 30px; }
-    .log-header { font-weight: 600; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .log-table { background: #fff; border-radius: 8px; overflow: hidden; }
+    .log-header { font-weight: 600; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 16px; color: #333; }
+    .log-table { background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
     
     /* 模态框样式 */
     .modal-header { border-bottom: 1px solid #f0f0f0; }
@@ -99,6 +113,39 @@
     .stat-icon { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 12px; color: #fff; }
     .stat-success { background-color: #52C41A; }
     .stat-fail { background-color: #FF4D4F; }
+    
+    /* 详情模态框样式 */
+    .detail-content { padding: 10px 0; }
+    .detail-section { border-bottom: 1px solid #f0f0f0; padding-bottom: 15px; }
+    .detail-section:last-child { border-bottom: none; }
+    .detail-section-title { color: #1890FF; font-weight: 600; font-size: 16px; padding-bottom: 10px; border-bottom: 2px solid #1890FF; }
+    .detail-section-title i { margin-right: 8px; }
+    
+    /* 响应式布局 */
+    @media (max-width: 1200px) {
+      .filter-item { min-width: 180px; }
+      .date-range-group .form-control { width: 130px; }
+    }
+    @media (max-width: 768px) {
+      .filter-section { padding: 16px; }
+      .filter-row { gap: 12px; margin-bottom: 12px; }
+      .filter-item { min-width: 100%; flex: 0 0 100%; }
+      .filter-label { min-width: 80px; }
+      .date-range-group { width: 100%; }
+      .date-range-group .form-control { width: calc(50% - 20px); }
+      .filter-actions { flex-direction: column; }
+      .filter-actions button { width: 100%; }
+      .table-responsive { max-height: 400px; overflow-x: auto; }
+      .table th, .table td { padding: 10px 12px; font-size: 13px; white-space: nowrap; }
+      .detail-section-title { font-size: 14px; }
+    }
+    @media (max-width: 480px) {
+      .main-content { padding: 12px; }
+      .filter-section { padding: 12px; }
+      .date-range-group { flex-direction: column; gap: 8px; }
+      .date-range-group .form-control { width: 100%; }
+      .date-range-separator { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -180,7 +227,7 @@
           <li class="nav-item">
               <a href="关键数据配置.html" class="nav-link">
                   <i class="fa fa-wrench"></i>
-                  <span>其他数据维护</span>
+                  <span>业务数据维护</span>
               </a>
           </li>
       </ul>
@@ -273,21 +320,24 @@
         <div class="filter-row">
           <div class="filter-item">
             <label class="filter-label">公示日期：</label>
-            <input type="date" id="publishStartDate" class="form-control" style="width: 140px; display: inline-block;">
-            <span style="margin: 0 5px;">至</span>
-            <input type="date" id="publishEndDate" class="form-control" style="width: 140px; display: inline-block;">
+            <div class="date-range-group">
+              <input type="date" id="publishStartDate" class="form-control">
+              <span class="date-range-separator">至</span>
+              <input type="date" id="publishEndDate" class="form-control">
+            </div>
           </div>
           <div class="filter-item">
             <label class="filter-label">创建日期：</label>
-            <input type="date" id="createStartDate" class="form-control" style="width: 140px; display: inline-block;">
-            <span style="margin: 0 5px;">至</span>
-            <input type="date" id="createEndDate" class="form-control" style="width: 140px; display: inline-block;">
+            <div class="date-range-group">
+              <input type="date" id="createStartDate" class="form-control">
+              <span class="date-range-separator">至</span>
+              <input type="date" id="createEndDate" class="form-control">
+            </div>
           </div>
           <div class="filter-item">
             <label class="filter-label">联系电话：</label>
             <input type="text" id="phone" class="form-control" placeholder="支持模糊查询">
           </div>
-          <div class="filter-item"></div>
         </div>
         <div class="filter-actions">
           <button id="queryBtn" class="btn-filter">
@@ -449,6 +499,26 @@
     </div>
   </div>
 
+  <!-- 详情模态框 -->
+  <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fa fa-user"></i> 服务对象详情
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" id="detailModalBody">
+          <!-- 详情内容将通过JavaScript动态生成 -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 导出中模态框 -->
   <div class="modal fade" id="exportingModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-sm">
@@ -464,6 +534,29 @@
     </div>
   </div>
 
+  <!-- 通知模态框 -->
+  <div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fa fa-bell-o"></i> 系统通知
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="notificationList">
+            <!-- 通知列表将通过JavaScript动态生成 -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+          <button type="button" class="btn btn-primary" id="markAllReadBtn">全部标记为已读</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // 页面加载完成后初始化
     $(function() {
@@ -471,13 +564,96 @@
       const validationModal = new bootstrap.Modal('#validationModal');
       const promptModal = new bootstrap.Modal('#promptModal');
       const exportingModal = new bootstrap.Modal('#exportingModal');
+      const notificationModal = new bootstrap.Modal('#notificationModal');
+      const detailModal = new bootstrap.Modal('#detailModal');
+      
+      // 通知数据
+      let notifications = [
+        { id: 1, title: '数据导出完成', content: '服务对象数据导出已完成，共导出8条记录。', time: '2025-12-10 14:30:25', read: false, type: 'success' },
+        { id: 2, title: '系统维护通知', content: '系统将于今晚22:00-24:00进行维护，期间可能无法访问。', time: '2025-12-10 10:15:00', read: false, type: 'warning' },
+        { id: 3, title: '新功能上线', content: '医保平台新增服务对象数据导出功能已上线，欢迎使用。', time: '2025-12-09 09:00:00', read: false, type: 'info' }
+      ];
+      
+      // 通知按钮点击事件
+      $('.notification').click(function() {
+        renderNotifications();
+        notificationModal.show();
+      });
+      
+      // 渲染通知列表
+      function renderNotifications() {
+        const notificationList = $('#notificationList');
+        notificationList.empty();
+        
+        const unreadCount = notifications.filter(n => !n.read).length;
+        $('.notification-badge').text(unreadCount > 0 ? unreadCount : '');
+        $('.notification-badge').toggle(unreadCount > 0);
+        
+        if (notifications.length === 0) {
+          notificationList.html('<div class="text-center text-muted py-4">暂无通知</div>');
+          return;
+        }
+        
+        notifications.forEach(notif => {
+          const typeClass = {
+            'success': 'text-success',
+            'warning': 'text-warning',
+            'info': 'text-info',
+            'error': 'text-danger'
+          }[notif.type] || 'text-info';
+          
+          const iconClass = {
+            'success': 'fa-check-circle',
+            'warning': 'fa-exclamation-circle',
+            'info': 'fa-info-circle',
+            'error': 'fa-times-circle'
+          }[notif.type] || 'fa-info-circle';
+          
+          notificationList.append(`
+            <div class="notification-item p-3 mb-2 border rounded ${notif.read ? '' : 'bg-light'}" data-id="${notif.id}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center mb-1">
+                    <i class="fa ${iconClass} ${typeClass} me-2"></i>
+                    <strong class="${notif.read ? '' : 'fw-bold'}">${notif.title}</strong>
+                    ${!notif.read ? '<span class="badge bg-danger ms-2">未读</span>' : ''}
+                  </div>
+                  <p class="text-muted mb-1 small">${notif.content}</p>
+                  <small class="text-muted">${notif.time}</small>
+                </div>
+                ${!notif.read ? '<button class="btn btn-sm btn-link mark-read-btn" data-id="' + notif.id + '">标记已读</button>' : ''}
+              </div>
+            </div>
+          `);
+        });
+      }
+      
+      // 标记单个通知为已读
+      $(document).on('click', '.mark-read-btn', function() {
+        const id = parseInt($(this).data('id'));
+        const notif = notifications.find(n => n.id === id);
+        if (notif) {
+          notif.read = true;
+          renderNotifications();
+        }
+      });
+      
+      // 全部标记为已读
+      $('#markAllReadBtn').click(function() {
+        notifications.forEach(n => n.read = true);
+        renderNotifications();
+      });
+      
+      // 初始化通知显示
+      renderNotifications();
 
-      // 设置默认日期范围（近1个月）
-      const today = new Date();
-      const oneMonthAgo = new Date();
-      oneMonthAgo.setMonth(today.getMonth() - 1);
-      $('#publishStartDate').val(formatDate(oneMonthAgo));
-      $('#publishEndDate').val(formatDate(today));
+      // 设置默认日期范围（设置为空，不限制日期范围，确保能显示所有数据）
+      // 如果需要限制日期范围，可以取消下面的注释
+      // const today = new Date();
+      // const oneYearAgo = new Date();
+      // oneYearAgo.setFullYear(today.getFullYear() - 1);
+      // $('#publishStartDate').val(formatDate(oneYearAgo));
+      // $('#publishEndDate').val(formatDate(today));
 
       // 全局变量
       let selectedRows = [];  // 选中的数据行ID
@@ -502,15 +678,13 @@
         $('#medicalType').val('');
         $('#medicalStatus').val('');
         $('#serviceStatus').val('');
-        $('#publishStartDate').val('');
-        $('#publishEndDate').val('');
         $('#createStartDate').val('');
         $('#createEndDate').val('');
         $('#phone').val('');
         
-        // 重置日期为默认值
-        $('#publishStartDate').val(formatDate(oneMonthAgo));
-        $('#publishEndDate').val(formatDate(today));
+        // 重置日期为空（不限制日期范围）
+        $('#publishStartDate').val('');
+        $('#publishEndDate').val('');
         
         // 重新查询
         queryData();
@@ -578,79 +752,133 @@
       $('#refreshLogBtn').click(loadExportLogs);
 
       // 查看详情按钮点击事件
-      $(document).on('click', '.view-detail-btn', function() {
-        const id = $(this).data('id');
-        const item = allData.find(item => item.id === id);
+      $(document).on('click', '.view-detail-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        if (item) {
-          const age = item.birthDate ? calculateAge(item.birthDate) : '-';
-          const gender = item.gender || '-';
-          
-          let detailHtml = `
-            <div class="row mb-2">
-              <div class="col-4"><strong>姓名：</strong></div>
-              <div class="col-8">${item.name}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>身份证号：</strong></div>
-              <div class="col-8">${item.idCard}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>性别：</strong></div>
-              <div class="col-8">${gender}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>年龄：</strong></div>
-              <div class="col-8">${age}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>联系电话：</strong></div>
-              <div class="col-8">${item.phone || '<span class="text-danger">未填写</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>行政区划：</strong></div>
-              <div class="col-8">${item.region || '<span class="text-muted">-</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>服务机构：</strong></div>
-              <div class="col-8">${item.orgName || '<span class="text-muted">-</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>失能等级：</strong></div>
-              <div class="col-8">${item.disabilityLevel}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>医保类型：</strong></div>
-              <div class="col-8">${item.medicalType || '<span class="text-danger">未填写</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>医保绑定状态：</strong></div>
-              <div class="col-8">${item.medicalStatus === '已绑定' ? 
-                '<span class="badge" style="background-color: #E6F7E6; color: #52C41A;">已绑定</span>' : 
-                '<span class="badge" style="background-color: #FFF1F0; color: #FF4D4F;">未绑定</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>服务状态：</strong></div>
-              <div class="col-8">${item.serviceStatus || '正常'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>公示日期：</strong></div>
-              <div class="col-8">${item.publishDate || '<span class="text-muted">-</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>创建日期：</strong></div>
-              <div class="col-8">${item.createDate || '<span class="text-muted">-</span>'}</div>
-            </div>
-            <div class="row mb-2">
-              <div class="col-4"><strong>居住地址：</strong></div>
-              <div class="col-8">${item.address || '<span class="text-danger">未填写</span>'}</div>
+        const id = $(this).data('id');
+        // 尝试多种ID匹配方式（字符串和数字）
+        const item = allData.find(item => {
+          return item.id === id || 
+                 item.id === String(id) || 
+                 String(item.id) === String(id);
+        });
+        
+        if (!item) {
+          console.error('未找到对应的数据项，ID:', id, 'allData长度:', allData.length);
+          alert('未找到对应的数据信息，请刷新页面重试');
+          return;
+        }
+        
+        // 生成详情HTML
+        const age = item.birthDate ? calculateAge(item.birthDate) : '-';
+        const gender = item.gender || '-';
+        
+        let detailHtml = `
+            <div class="detail-content">
+              <div class="detail-section mb-3">
+                <h6 class="detail-section-title mb-3"><i class="fa fa-user"></i> 基本信息</h6>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">姓名：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.name}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">身份证号：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.idCard}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">性别：</strong></div>
+                  <div class="col-md-9 col-sm-8">${gender}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">年龄：</strong></div>
+                  <div class="col-md-9 col-sm-8">${age}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">联系电话：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.phone || '<span class="text-danger">未填写</span>'}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">居住地址：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.address || '<span class="text-danger">未填写</span>'}</div>
+                </div>
+              </div>
+              
+              <div class="detail-section mb-3">
+                <h6 class="detail-section-title mb-3"><i class="fa fa-building"></i> 服务信息</h6>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">行政区划：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.region || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">服务机构：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.orgName || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">失能等级：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.disabilityLevel}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">服务状态：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.serviceStatus || '正常'}</div>
+                </div>
+              </div>
+              
+              <div class="detail-section mb-3">
+                <h6 class="detail-section-title mb-3"><i class="fa fa-heartbeat"></i> 医保信息</h6>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">医保类型：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.medicalType || '<span class="text-danger">未填写</span>'}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">医保绑定状态：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.medicalStatus === '已绑定' ? 
+                    '<span class="badge" style="background-color: #E6F7E6; color: #52C41A; padding: 4px 10px;">已绑定</span>' : 
+                    '<span class="badge" style="background-color: #FFF1F0; color: #FF4D4F; padding: 4px 10px;">未绑定</span>'}</div>
+                </div>
+              </div>
+              
+              <div class="detail-section">
+                <h6 class="detail-section-title mb-3"><i class="fa fa-calendar"></i> 日期信息</h6>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">公示日期：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.publishDate || '<span class="text-muted">-</span>'}</div>
+                </div>
+                <div class="row mb-2">
+                  <div class="col-md-3 col-sm-4"><strong class="text-muted">创建日期：</strong></div>
+                  <div class="col-md-9 col-sm-8">${item.createDate || '<span class="text-muted">-</span>'}</div>
+                </div>
+              </div>
             </div>
           `;
+        
+        // 更新详情模态框内容
+        $('#detailModalBody').html(detailHtml);
+        
+        // 确保模态框正确显示
+        try {
+          // 使用jQuery方式显示模态框（更可靠）
+          $('#detailModal').modal('show');
           
-          // 更新模态框内容并显示
-          $('#promptTitle').text('服务对象详情');
-          $('#promptMsg').html(detailHtml);
-          promptModal.show();
+          // 备用方案：使用Bootstrap 5的Modal API
+          setTimeout(function() {
+            if (!$('#detailModal').hasClass('show')) {
+              const modalElement = document.getElementById('detailModal');
+              if (modalElement) {
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                if (bsModal) {
+                  bsModal.show();
+                }
+              }
+            }
+          }, 100);
+        } catch (error) {
+          console.error('显示详情模态框失败:', error);
+          // 最后的备用方案：直接操作DOM
+          $('#detailModal').addClass('show').css('display', 'block');
+          $('body').addClass('modal-open');
+          $('.modal-backdrop').remove();
+          $('body').append('<div class="modal-backdrop fade show"></div>');
         }
       });
 
@@ -685,93 +913,94 @@
           phone: $('#phone').val().trim()
         };
         
-        // 显示加载提示
-        showPrompt('查询中', '正在获取数据，请稍后...');
+        // 模拟完整数据
+        let mockData = [
+          { id: '1', name: '张三', idCard: '330602199001011234', gender: '男', birthDate: '1990-01-01',
+            disabilityLevel: '重度', medicalType: '职工医保', medicalStatus: '已绑定',
+            serviceStatus: '正常', publishDate: '2025-09-15', createDate: '2025-09-10',
+            address: '绍兴市越城区XX路123号', phone: '13800138000', region: '越城区', orgName: '机构A' },
+          { id: '2', name: '李四', idCard: '330602198505125678', gender: '女', birthDate: '1985-05-12',
+            disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '已绑定',
+            serviceStatus: '正常', publishDate: '2025-09-20', createDate: '2025-09-18',
+            address: '绍兴市柯桥区XX街道456号', phone: '13900139000', region: '柯桥区', orgName: '机构B' },
+          { id: '3', name: '王五', idCard: '330602197808259012', gender: '男', birthDate: '1978-08-25',
+            disabilityLevel: '重度', medicalType: '', medicalStatus: '未绑定',
+            serviceStatus: '暂停', publishDate: '2025-09-25', createDate: '2025-09-22',
+            address: '绍兴市上虞区XX镇789号', phone: '13700137000', region: '上虞区', orgName: '机构A' },
+          { id: '4', name: '赵六', idCard: '330602198211303456', gender: '女', birthDate: '1982-11-30',
+            disabilityLevel: '中度', medicalType: '职工医保', medicalStatus: '已绑定',
+            serviceStatus: '正常', publishDate: '2025-10-05', createDate: '2025-10-01',
+            address: '绍兴市诸暨市XX路321号', phone: '13600136000', region: '诸暨市', orgName: '机构C' },
+          { id: '5', name: '孙七', idCard: '330602199503187890', gender: '男', birthDate: '1995-03-18',
+            disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '未绑定',
+            serviceStatus: '转出', publishDate: '2025-10-10', createDate: '2025-10-08',
+            address: '绍兴市嵊州市XX街道654号', phone: '13500135000', region: '嵊州市', orgName: '机构B' },
+          { id: '6', name: '周八', idCard: '330602198807224567', gender: '女', birthDate: '1988-07-22',
+            disabilityLevel: '轻度', medicalType: '职工医保', medicalStatus: '已绑定',
+            serviceStatus: '正常', publishDate: '2025-10-15', createDate: '2025-10-12',
+            address: '绍兴市新昌县XX路987号', phone: '13400134000', region: '新昌县', orgName: '机构A' },
+          { id: '7', name: '吴九', idCard: '330602199201154321', gender: '男', birthDate: '1992-01-15',
+            disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '已绑定',
+            serviceStatus: '正常', publishDate: '2025-10-18', createDate: '2025-10-15',
+            address: '绍兴市越城区XX路555号', phone: '13300133000', region: '越城区', orgName: '机构C' },
+          { id: '8', name: '郑十', idCard: '330602197512089876', gender: '女', birthDate: '1975-12-08',
+            disabilityLevel: '重度', medicalType: '职工医保', medicalStatus: '未绑定',
+            serviceStatus: '死亡', publishDate: '2025-09-28', createDate: '2025-09-25',
+            address: '绍兴市柯桥区XX街道888号', phone: '13200132000', region: '柯桥区', orgName: '机构B' },
+        ];
         
-        // 模拟异步查询数据
-        setTimeout(() => {
-          // 模拟完整数据
-          let mockData = [
-            { id: '1', name: '张三', idCard: '330602199001011234', gender: '男', birthDate: '1990-01-01',
-              disabilityLevel: '重度', medicalType: '职工医保', medicalStatus: '已绑定',
-              serviceStatus: '正常', publishDate: '2025-09-15', createDate: '2025-09-10',
-              address: '绍兴市越城区XX路123号', phone: '13800138000', region: '越城区', orgName: '机构A' },
-            { id: '2', name: '李四', idCard: '330602198505125678', gender: '女', birthDate: '1985-05-12',
-              disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '已绑定',
-              serviceStatus: '正常', publishDate: '2025-09-20', createDate: '2025-09-18',
-              address: '绍兴市柯桥区XX街道456号', phone: '13900139000', region: '柯桥区', orgName: '机构B' },
-            { id: '3', name: '王五', idCard: '330602197808259012', gender: '男', birthDate: '1978-08-25',
-              disabilityLevel: '重度', medicalType: '', medicalStatus: '未绑定',
-              serviceStatus: '暂停', publishDate: '2025-09-25', createDate: '2025-09-22',
-              address: '绍兴市上虞区XX镇789号', phone: '13700137000', region: '上虞区', orgName: '机构A' },
-            { id: '4', name: '赵六', idCard: '330602198211303456', gender: '女', birthDate: '1982-11-30',
-              disabilityLevel: '中度', medicalType: '职工医保', medicalStatus: '已绑定',
-              serviceStatus: '正常', publishDate: '2025-10-05', createDate: '2025-10-01',
-              address: '绍兴市诸暨市XX路321号', phone: '13600136000', region: '诸暨市', orgName: '机构C' },
-            { id: '5', name: '孙七', idCard: '330602199503187890', gender: '男', birthDate: '1995-03-18',
-              disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '未绑定',
-              serviceStatus: '转出', publishDate: '2025-10-10', createDate: '2025-10-08',
-              address: '绍兴市嵊州市XX街道654号', phone: '13500135000', region: '嵊州市', orgName: '机构B' },
-            { id: '6', name: '周八', idCard: '330602198807224567', gender: '女', birthDate: '1988-07-22',
-              disabilityLevel: '轻度', medicalType: '职工医保', medicalStatus: '已绑定',
-              serviceStatus: '正常', publishDate: '2025-10-15', createDate: '2025-10-12',
-              address: '绍兴市新昌县XX路987号', phone: '13400134000', region: '新昌县', orgName: '机构A' },
-            { id: '7', name: '吴九', idCard: '330602199201154321', gender: '男', birthDate: '1992-01-15',
-              disabilityLevel: '重度', medicalType: '城乡居民医保', medicalStatus: '已绑定',
-              serviceStatus: '正常', publishDate: '2025-10-18', createDate: '2025-10-15',
-              address: '绍兴市越城区XX路555号', phone: '13300133000', region: '越城区', orgName: '机构C' },
-            { id: '8', name: '郑十', idCard: '330602197512089876', gender: '女', birthDate: '1975-12-08',
-              disabilityLevel: '重度', medicalType: '职工医保', medicalStatus: '未绑定',
-              serviceStatus: '死亡', publishDate: '2025-09-28', createDate: '2025-09-25',
-              address: '绍兴市柯桥区XX街道888号', phone: '13200132000', region: '柯桥区', orgName: '机构B' },
-          ];
+        // 应用筛选条件
+        allData = mockData.filter(item => {
+          // 姓名模糊匹配
+          if (filters.name && !item.name.includes(filters.name)) return false;
           
-          // 应用筛选条件
-          allData = mockData.filter(item => {
-            // 姓名模糊匹配
-            if (filters.name && !item.name.includes(filters.name)) return false;
-            
-            // 身份证号模糊匹配
-            if (filters.idCard && !item.idCard.includes(filters.idCard)) return false;
-            
-            // 行政区划精确匹配
-            if (filters.region && item.region !== filters.region) return false;
-            
-            // 服务机构精确匹配
-            if (filters.orgName && item.orgName !== filters.orgName) return false;
-            
-            // 失能等级精确匹配
-            if (filters.disabilityLevel && item.disabilityLevel !== filters.disabilityLevel) return false;
-            
-            // 医保类型精确匹配
-            if (filters.medicalType && item.medicalType !== filters.medicalType) return false;
-            
-            // 医保绑定状态匹配
-            if (filters.medicalStatus && item.medicalStatus !== filters.medicalStatus) return false;
-            
-            // 服务状态匹配
-            if (filters.serviceStatus && item.serviceStatus !== filters.serviceStatus) return false;
-            
-            // 公示日期范围
-            if (filters.publishStartDate && item.publishDate < filters.publishStartDate) return false;
-            if (filters.publishEndDate && item.publishDate > filters.publishEndDate) return false;
-            
-            // 创建日期范围
-            if (filters.createStartDate && item.createDate < filters.createStartDate) return false;
-            if (filters.createEndDate && item.createDate > filters.createEndDate) return false;
-            
-            // 联系电话模糊匹配
-            if (filters.phone && (!item.phone || !item.phone.includes(filters.phone))) return false;
-            
-            return true;
-          });
+          // 身份证号模糊匹配
+          if (filters.idCard && !item.idCard.includes(filters.idCard)) return false;
           
-          // 更新数据列表
-          renderDataList();
+          // 行政区划精确匹配
+          if (filters.region && item.region !== filters.region) return false;
           
-          // 关闭提示
-          promptModal.hide();
-        }, 800);
+          // 服务机构精确匹配
+          if (filters.orgName && item.orgName !== filters.orgName) return false;
+          
+          // 失能等级精确匹配
+          if (filters.disabilityLevel && item.disabilityLevel !== filters.disabilityLevel) return false;
+          
+          // 医保类型精确匹配
+          if (filters.medicalType && item.medicalType !== filters.medicalType) return false;
+          
+          // 医保绑定状态匹配
+          if (filters.medicalStatus && item.medicalStatus !== filters.medicalStatus) return false;
+          
+          // 服务状态匹配
+          if (filters.serviceStatus && item.serviceStatus !== filters.serviceStatus) return false;
+          
+          // 公示日期范围（如果设置了开始日期，则过滤小于开始日期的；如果设置了结束日期，则过滤大于结束日期的）
+          // 只有当日期字段存在时才进行筛选
+          if (filters.publishStartDate && item.publishDate) {
+            if (item.publishDate < filters.publishStartDate) return false;
+          }
+          if (filters.publishEndDate && item.publishDate) {
+            if (item.publishDate > filters.publishEndDate) return false;
+          }
+          
+          // 创建日期范围（如果设置了开始日期，则过滤小于开始日期的；如果设置了结束日期，则过滤大于结束日期的）
+          // 只有当日期字段存在时才进行筛选
+          if (filters.createStartDate && item.createDate) {
+            if (item.createDate < filters.createStartDate) return false;
+          }
+          if (filters.createEndDate && item.createDate) {
+            if (item.createDate > filters.createEndDate) return false;
+          }
+          
+          // 联系电话模糊匹配
+          if (filters.phone && (!item.phone || !item.phone.includes(filters.phone))) return false;
+          
+          return true;
+        });
+        
+        // 更新数据列表
+        renderDataList();
       }
 
       // 渲染数据列表
@@ -1013,5 +1242,4 @@
     });
   </script>
 </body>
-
 </html>
