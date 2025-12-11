@@ -46,6 +46,7 @@
         .form-label { font-weight: 500; margin-bottom: 8px; display: block; font-size: 14px; }
         .form-control { border-radius: 8px; border: 1px solid #ddd; padding: 10px 12px; font-size: 14px; transition: border-color 0.3s; }
         .form-control:focus { border-color: #1890FF; box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1); outline: none; }
+        .form-control:disabled { background-color: #f5f5f5; cursor: not-allowed; }
         .form-text { color: #666; font-size: 12px; margin-top: 5px; line-height: 1.4; }
         .textarea-height { height: 100px; resize: none; }
         /* 按钮区域 */
@@ -137,7 +138,7 @@
                 <li class="nav-item">
                     <a href="关键数据配置.html" class="nav-link">
                         <i class="fa fa-wrench"></i>
-                        <span>其他数据维护</span>
+                        <span>业务数据维护</span>
                     </a>
                 </li>
             </ul>
@@ -238,9 +239,10 @@
 
                         <!-- 按钮区域 -->
                         <div class="btn-area">
+                            <button type="button" class="btn btn-primary" id="editBtn"><i class="fa fa-edit"></i> 修改</button>
                             <button type="button" class="btn btn-outline-secondary" id="previewBtn"><i class="fa fa-eye"></i> 预览</button>
-                            <button type="button" class="btn btn-primary" id="saveBtn"><i class="fa fa-save"></i> 保存</button>
-                            <button type="button" class="btn btn-outline-secondary" id="resetBtn"><i class="fa fa-refresh"></i> 取消</button>
+                            <button type="button" class="btn btn-primary" id="saveBtn" style="display: none;"><i class="fa fa-save"></i> 保存</button>
+                            <button type="button" class="btn btn-outline-secondary" id="resetBtn" style="display: none;"><i class="fa fa-refresh"></i> 取消</button>
                         </div>
                     </form>
                 </div>
@@ -286,11 +288,37 @@
         </div>
     </div>
 
+    <!-- 通知模态框 -->
+    <div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fa fa-bell-o"></i> 系统通知
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="notificationList">
+                        <!-- 通知列表将通过JavaScript动态生成 -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-primary" id="markAllReadBtn">全部标记为已读</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 页面加载完成后初始化
         $(function() {
+            // 初始化表单为只读状态
+            setFormReadonly(true);
+            
             // 初始化表单原始数据（用于取消重置）
             const originalFormData = {
                 orgName: $('#orgName').val(),
@@ -302,6 +330,21 @@
                 orgAccountName: $('#orgAccountName').val(),
                 orgAccountNo: $('#orgAccountNo').val()
             };
+            
+            // 修改按钮点击事件
+            $('#editBtn').click(function() {
+                setFormReadonly(false);
+                // 隐藏修改按钮，显示保存和取消按钮
+                $(this).hide();
+                $('#saveBtn, #resetBtn').show();
+            });
+            
+            // 设置表单只读/可编辑状态
+            function setFormReadonly(readonly) {
+                $('#orgName, #orgAddress, #orgLegalPerson, #orgPhone, #orgBankName, #orgBankCode, #orgAccountName, #orgAccountNo').prop('disabled', readonly);
+                // 预览按钮始终可用
+                $('#previewBtn').prop('disabled', false);
+            }
 
             // 预览按钮点击事件
             $('#previewBtn').click(function() {
@@ -339,6 +382,32 @@
                 const formData = getFormData();
 
                 // 模拟保存请求（实际项目中替换为AJAX请求）
+                // 由于是演示环境，使用模拟保存
+                try {
+                    // 模拟保存成功
+                    alert('机构信息保存成功！已同步至所有关联模块（服务协议、评估结论书等）');
+                    
+                    // 更新原始数据
+                    originalFormData.orgName = formData.orgName;
+                    originalFormData.orgAddress = formData.orgAddress;
+                    originalFormData.orgLegalPerson = formData.orgLegalPerson;
+                    originalFormData.orgPhone = formData.orgPhone;
+                    originalFormData.orgBankName = formData.orgBankName;
+                    originalFormData.orgBankCode = formData.orgBankCode;
+                    originalFormData.orgAccountName = formData.orgAccountName;
+                    originalFormData.orgAccountNo = formData.orgAccountNo;
+                    
+                    // 保存后恢复只读状态
+                    setFormReadonly(true);
+                    // 隐藏保存和取消按钮，显示修改按钮
+                    $('#saveBtn, #resetBtn').hide();
+                    $('#editBtn').show();
+                } catch (error) {
+                    alert('保存失败：' + error.message);
+                }
+                
+                // 实际项目中的AJAX请求代码（保留作为参考）
+                /*
                 $.ajax({
                     url: '/api/admin/org/config/save',
                     type: 'POST',
@@ -347,6 +416,11 @@
                     success: function(res) {
                         if (res.code === 200) {
                             alert('机构信息保存成功！已同步至所有关联模块（服务协议、评估结论书等）');
+                            // 更新原始数据
+                            originalFormData = Object.assign({}, formData);
+                            // 保存后恢复只读状态
+                            setFormReadonly(true);
+                            $('#editBtn').show();
                         } else {
                             alert('保存失败：' + res.message);
                         }
@@ -355,18 +429,27 @@
                         alert('保存失败，请检查网络连接');
                     }
                 });
+                */
             });
 
             // 取消按钮点击事件（重置表单）
             $('#resetBtn').click(function() {
-                $('#orgName').val(originalFormData.orgName);
-                $('#orgAddress').val(originalFormData.orgAddress);
-                $('#orgLegalPerson').val(originalFormData.orgLegalPerson);
-                $('#orgPhone').val(originalFormData.orgPhone);
-                $('#orgBankName').val(originalFormData.orgBankName);
-                $('#orgBankCode').val(originalFormData.orgBankCode);
-                $('#orgAccountName').val(originalFormData.orgAccountName);
-                $('#orgAccountNo').val(originalFormData.orgAccountNo);
+                if (confirm('确定要取消修改吗？未保存的更改将丢失。')) {
+                    $('#orgName').val(originalFormData.orgName);
+                    $('#orgAddress').val(originalFormData.orgAddress);
+                    $('#orgLegalPerson').val(originalFormData.orgLegalPerson);
+                    $('#orgPhone').val(originalFormData.orgPhone);
+                    $('#orgBankName').val(originalFormData.orgBankName);
+                    $('#orgBankCode').val(originalFormData.orgBankCode);
+                    $('#orgAccountName').val(originalFormData.orgAccountName);
+                    $('#orgAccountNo').val(originalFormData.orgAccountNo);
+                    
+                    // 恢复只读状态
+                    setFormReadonly(true);
+                    // 隐藏保存和取消按钮，显示修改按钮
+                    $('#saveBtn, #resetBtn').hide();
+                    $('#editBtn').show();
+                }
             });
 
             // 辅助函数：获取表单数据
@@ -412,8 +495,90 @@
 
                 return isValid;
             }
+            
+            // ========== 通知功能 ==========
+            // 通知数据
+            let notifications = [
+                { id: 1, title: '机构信息更新', content: '机构信息配置已保存成功。', time: '2025-12-10 14:30:25', read: false, type: 'success' },
+                { id: 2, title: '系统维护通知', content: '系统将于今晚22:00-24:00进行维护，期间可能无法访问。', time: '2025-12-10 10:15:00', read: false, type: 'warning' }
+            ];
+            
+            // 通知按钮点击事件
+            $('.notification').click(function() {
+                renderNotifications();
+                const notificationModal = new bootstrap.Modal('#notificationModal');
+                notificationModal.show();
+            });
+            
+            // 渲染通知列表
+            function renderNotifications() {
+                const notificationList = $('#notificationList');
+                if (notificationList.length === 0) return;
+                
+                notificationList.empty();
+                
+                const unreadCount = notifications.filter(n => !n.read).length;
+                $('.notification-badge').text(unreadCount > 0 ? unreadCount : '');
+                $('.notification-badge').toggle(unreadCount > 0);
+                
+                if (notifications.length === 0) {
+                    notificationList.html('<div class="text-center text-muted py-4">暂无通知</div>');
+                    return;
+                }
+                
+                notifications.forEach(notif => {
+                    const typeClass = {
+                        'success': 'text-success',
+                        'warning': 'text-warning',
+                        'info': 'text-info',
+                        'error': 'text-danger'
+                    }[notif.type] || 'text-info';
+                    
+                    const iconClass = {
+                        'success': 'fa-check-circle',
+                        'warning': 'fa-exclamation-circle',
+                        'info': 'fa-info-circle',
+                        'error': 'fa-times-circle'
+                    }[notif.type] || 'fa-info-circle';
+                    
+                    notificationList.append(`
+                        <div class="notification-item p-3 mb-2 border rounded ${notif.read ? '' : 'bg-light'}" data-id="${notif.id}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fa ${iconClass} ${typeClass} me-2"></i>
+                                        <strong class="${notif.read ? '' : 'fw-bold'}">${notif.title}</strong>
+                                        ${!notif.read ? '<span class="badge bg-danger ms-2">未读</span>' : ''}
+                                    </div>
+                                    <p class="text-muted mb-1 small">${notif.content}</p>
+                                    <small class="text-muted">${notif.time}</small>
+                                </div>
+                                ${!notif.read ? '<button class="btn btn-sm btn-link mark-read-btn" data-id="' + notif.id + '">标记已读</button>' : ''}
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+            
+            // 标记单个通知为已读
+            $(document).on('click', '.mark-read-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const notif = notifications.find(n => n.id === id);
+                if (notif) {
+                    notif.read = true;
+                    renderNotifications();
+                }
+            });
+            
+            // 全部标记为已读
+            $(document).on('click', '#markAllReadBtn', function() {
+                notifications.forEach(n => n.read = true);
+                renderNotifications();
+            });
+            
+            // 初始化通知显示
+            renderNotifications();
         });
     </script>
 </body>
-
 </html>
