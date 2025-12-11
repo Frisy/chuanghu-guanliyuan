@@ -173,7 +173,7 @@
           <li class="nav-item">
               <a href="关键数据配置.html" class="nav-link">
                   <i class="fa fa-wrench"></i>
-                  <span>其他数据维护</span>
+                  <span>业务数据维护</span>
               </a>
           </li>
       </ul>
@@ -363,6 +363,29 @@
     </div>
   </div>
 
+  <!-- 通知模态框 -->
+  <div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fa fa-bell-o"></i> 系统通知
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="notificationList">
+            <!-- 通知列表将通过JavaScript动态生成 -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+          <button type="button" class="btn btn-primary" id="markAllReadBtn">全部标记为已读</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     // 全局变量
@@ -418,6 +441,8 @@
     // 初始化服务项目列表（优化性能）
     function initServiceItems() {
       const sourceList = document.getElementById('source-projects');
+      if (!sourceList) return; // 如果元素不存在，直接返回
+      
       sourceList.innerHTML = '';
       
       // 使用DocumentFragment批量添加DOM，减少重排和重绘
@@ -453,31 +478,54 @@
       sourceList.appendChild(fragment);
     }
 
+    // 立即初始化服务项目列表（不等待window.onload）
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        initServiceItems();
+      });
+    } else {
+      // DOM已经加载完成，立即初始化
+      initServiceItems();
+    }
+    
     // 初始化拖拽功能（Sortable.js）
     window.onload = function() {
-      // 初始化服务项目列表
+      // 确保服务项目列表已初始化
       initServiceItems();
       
-      // 已选项目列表拖拽排序
-      const targetList = document.getElementById('target-projects');
-      new Sortable(targetList, {
-        animation: 150,
-        ghostClass: 'bg-light',
-        onEnd: function() {
-          calculateTotalDuration(); // 排序后重新计算时长
-        }
-      });
+      // 已选项目列表拖拽排序（延迟初始化，等待DOM完全加载）
+      setTimeout(function() {
+        const targetList = document.getElementById('target-projects');
+        if (targetList) {
+          targetList.sortableInstance = new Sortable(targetList, {
+            animation: 150,
+            ghostClass: 'bg-light',
+            onEnd: function() {
+              calculateTotalDuration(); // 排序后重新计算时长
+            }
+          });
 
-      // 监听已选项目选中状态，控制操作按钮
-      targetList.addEventListener('click', function(e) {
-        const clickedItem = e.target.closest('.project-item');
-        if (clickedItem && e.target.type !== 'checkbox' && e.target.tagName !== 'INPUT') {
-          const items = targetList.querySelectorAll('.project-item');
-          items.forEach(item => item.classList.remove('selected'));
-          clickedItem.classList.add('selected');
-          updateActionButtons();
+          // 监听已选项目选中状态，控制操作按钮
+          // 注意：这个事件监听器在openEditPage中也会设置，这里作为备用
+          targetList.addEventListener('click', function(e) {
+            const clickedItem = e.target.closest('.project-item');
+            if (clickedItem) {
+              // 点击项目区域时，切换选中状态
+              const items = targetList.querySelectorAll('.project-item');
+              if (clickedItem.classList.contains('selected')) {
+                // 如果已选中，点击后取消选中（但项目不消失）
+                clickedItem.classList.remove('selected');
+                updateActionButtons(true);
+              } else {
+                // 如果未选中，点击后选中
+                items.forEach(item => item.classList.remove('selected'));
+                clickedItem.classList.add('selected');
+                updateActionButtons();
+              }
+            }
+          });
         }
-      });
+      }, 100);
     };
 
     // 套餐列表查询
@@ -523,6 +571,41 @@
       // 切换页面显示
       document.getElementById('list-page').style.display = 'none';
       document.getElementById('edit-page').style.display = 'block';
+
+      // 确保服务项目列表已初始化（解决延迟问题）
+      initServiceItems();
+      
+      // 初始化拖拽功能（如果还未初始化）
+      const targetList = document.getElementById('target-projects');
+      if (targetList && !targetList.sortableInstance) {
+        targetList.sortableInstance = new Sortable(targetList, {
+          animation: 150,
+          ghostClass: 'bg-light',
+          onEnd: function() {
+            calculateTotalDuration(); // 排序后重新计算时长
+          }
+        });
+        
+        // 监听已选项目选中状态，控制操作按钮
+        // 注意：每个项目都有自己的点击事件，这里作为全局备用
+        targetList.addEventListener('click', function(e) {
+          const clickedItem = e.target.closest('.project-item');
+          if (clickedItem) {
+            // 点击项目区域时，切换选中状态
+            const items = targetList.querySelectorAll('.project-item');
+            if (clickedItem.classList.contains('selected')) {
+              // 如果已选中，点击后取消选中（但项目不消失）
+              clickedItem.classList.remove('selected');
+              updateActionButtons(true);
+            } else {
+              // 如果未选中，点击后选中
+              items.forEach(item => item.classList.remove('selected'));
+              clickedItem.classList.add('selected');
+              updateActionButtons();
+            }
+          }
+        });
+      }
 
       // 重置编辑表单
       resetEditForm();
@@ -616,13 +699,23 @@
           item.classList.add('selected');
           // 复制到已选列表
           const clone = item.cloneNode(true);
-          clone.querySelector('input').checked = false; // 清除勾选
+          // 移除右侧项目的checkbox（右边不需要勾选框）
+          const checkboxInClone = clone.querySelector('input[type="checkbox"]');
+          if (checkboxInClone) {
+            checkboxInClone.remove();
+          }
           clone.classList.remove('selected');
           
-          // 添加点击事件以支持选中
+          // 添加点击事件：右边点击选中/取消选中（只改变高亮状态，不删除项目）
           clone.addEventListener('click', function(e) {
-            if (e.target.type !== 'checkbox' && e.target.tagName !== 'INPUT') {
-              const items = targetList.querySelectorAll('.project-item');
+            // 点击项目区域时，切换选中状态
+            const items = targetList.querySelectorAll('.project-item');
+            if (this.classList.contains('selected')) {
+              // 如果已选中，点击后取消选中（但项目不消失）
+              this.classList.remove('selected');
+              updateActionButtons(true);
+            } else {
+              // 如果未选中，点击后选中
               items.forEach(i => i.classList.remove('selected'));
               this.classList.add('selected');
               updateActionButtons();
@@ -647,6 +740,7 @@
       const itemId = item.dataset.id;
 
       if (checkbox.checked) {
+        // 1. 左边勾选，右边出现
         // 选中：添加到已选列表（如果已存在则不重复添加）
         const existingItem = targetList.querySelector(`.project-item[data-id="${itemId}"]`);
         if (existingItem) {
@@ -655,16 +749,26 @@
           return;
         }
         
-        item.classList.add('selected');
+        // 克隆项目到右侧，但移除checkbox
         const clone = item.cloneNode(true);
-        clone.querySelector('input').checked = false; // 清除勾选
-        clone.classList.remove('selected'); // 清除选中状态
+        // 移除右侧项目的checkbox（右边不需要勾选框）
+        const checkboxInClone = clone.querySelector('input[type="checkbox"]');
+        if (checkboxInClone) {
+          checkboxInClone.remove();
+        }
+        clone.classList.remove('selected'); // 初始不选中
         clone.setAttribute('data-source-id', itemId); // 标记来源
         
-        // 添加点击事件以支持选中
+        // 添加点击事件：右边点击选中/取消选中（只改变高亮状态，不删除项目）
         clone.addEventListener('click', function(e) {
-          if (e.target.type !== 'checkbox' && e.target.tagName !== 'INPUT') {
-            const items = targetList.querySelectorAll('.project-item');
+          // 点击项目区域时，切换选中状态
+          const items = targetList.querySelectorAll('.project-item');
+          if (this.classList.contains('selected')) {
+            // 如果已选中，点击后取消选中（但项目不消失）
+            this.classList.remove('selected');
+            updateActionButtons(true);
+          } else {
+            // 如果未选中，点击后选中
             items.forEach(i => i.classList.remove('selected'));
             this.classList.add('selected');
             updateActionButtons();
@@ -676,10 +780,18 @@
         // 计算总时长
         calculateTotalDuration();
       } else {
-        // 取消勾选：只更新左侧状态，不从右侧移除项目
-        // 右侧项目需要通过删除按钮手动移除
+        // 2. 左边取消勾选，右边消失
         item.classList.remove('selected');
-        // 不操作右侧列表，保持项目存在
+        
+        // 查找并移除右侧对应的项目
+        const targetItem = targetList.querySelector(`.project-item[data-id="${itemId}"]`);
+        if (targetItem) {
+          targetItem.remove();
+          // 重新计算总时长
+          calculateTotalDuration();
+          // 更新操作按钮状态
+          updateActionButtons(true);
+        }
       }
     }
     
@@ -716,6 +828,7 @@
 
       const itemId = selectedItem.dataset.id;
       
+      // 3. 右边勾选后点击删除，右边消失且左边取消勾选
       // 取消左侧对应项目的勾选
       const sourceItem = document.querySelector(`#source-projects .project-item[data-id="${itemId}"]`);
       if (sourceItem) {
@@ -840,7 +953,90 @@
       // 返回列表页
       backToListPage();
     }
+    
+    // ========== 通知功能 ==========
+    // 通知数据
+    let notifications = [
+      { id: 1, title: '套餐更新', content: '套餐配置已保存成功。', time: '2025-12-10 14:30:25', read: false, type: 'success' },
+      { id: 2, title: '系统维护通知', content: '系统将于今晚22:00-24:00进行维护，期间可能无法访问。', time: '2025-12-10 10:15:00', read: false, type: 'warning' },
+      { id: 3, title: '套餐推荐', content: '有3个新套餐可供选择，请查看。', time: '2025-12-09 09:00:00', read: false, type: 'info' }
+    ];
+    
+    // 通知按钮点击事件
+    $('.notification').click(function() {
+      renderNotifications();
+      const notificationModal = new bootstrap.Modal('#notificationModal');
+      notificationModal.show();
+    });
+    
+    // 渲染通知列表
+    function renderNotifications() {
+      const notificationList = $('#notificationList');
+      if (notificationList.length === 0) return;
+      
+      notificationList.empty();
+      
+      const unreadCount = notifications.filter(n => !n.read).length;
+      $('.notification-badge').text(unreadCount > 0 ? unreadCount : '');
+      $('.notification-badge').toggle(unreadCount > 0);
+      
+      if (notifications.length === 0) {
+        notificationList.html('<div class="text-center text-muted py-4">暂无通知</div>');
+        return;
+      }
+      
+      notifications.forEach(notif => {
+        const typeClass = {
+          'success': 'text-success',
+          'warning': 'text-warning',
+          'info': 'text-info',
+          'error': 'text-danger'
+        }[notif.type] || 'text-info';
+        
+        const iconClass = {
+          'success': 'fa-check-circle',
+          'warning': 'fa-exclamation-circle',
+          'info': 'fa-info-circle',
+          'error': 'fa-times-circle'
+        }[notif.type] || 'fa-info-circle';
+        
+        notificationList.append(`
+          <div class="notification-item p-3 mb-2 border rounded ${notif.read ? '' : 'bg-light'}" data-id="${notif.id}">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center mb-1">
+                  <i class="fa ${iconClass} ${typeClass} me-2"></i>
+                  <strong class="${notif.read ? '' : 'fw-bold'}">${notif.title}</strong>
+                  ${!notif.read ? '<span class="badge bg-danger ms-2">未读</span>' : ''}
+                </div>
+                <p class="text-muted mb-1 small">${notif.content}</p>
+                <small class="text-muted">${notif.time}</small>
+              </div>
+              ${!notif.read ? '<button class="btn btn-sm btn-link mark-read-btn" data-id="' + notif.id + '">标记已读</button>' : ''}
+            </div>
+          </div>
+        `);
+      });
+    }
+    
+    // 标记单个通知为已读
+    $(document).on('click', '.mark-read-btn', function() {
+      const id = parseInt($(this).data('id'));
+      const notif = notifications.find(n => n.id === id);
+      if (notif) {
+        notif.read = true;
+        renderNotifications();
+      }
+    });
+    
+    // 全部标记为已读
+    $(document).on('click', '#markAllReadBtn', function() {
+      notifications.forEach(n => n.read = true);
+      renderNotifications();
+    });
+    
+    // 初始化通知显示
+    renderNotifications();
   </script>
 </body>
-
 </html>
