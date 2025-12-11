@@ -169,7 +169,7 @@
                 <li class="nav-item">
                     <a href="关键数据配置.html" class="nav-link">
                         <i class="fa fa-wrench"></i>
-                        <span>其他数据维护</span>
+                        <span>业务数据维护</span>
                     </a>
                 </li>
             </ul>
@@ -326,7 +326,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="userForm">
+                    <form id="userForm" onsubmit="return false;">
                         
                         <ul class="nav nav-tabs" id="userTab" role="tablist">
                             <li class="nav-item" role="presentation">
@@ -475,12 +475,37 @@
         </div>
     </div>
 
+  <!-- 通知模态框 -->
+  <div class="modal fade" id="notificationModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fa fa-bell-o"></i> 系统通知
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="notificationList">
+            <!-- 通知列表将通过JavaScript动态生成 -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+          <button type="button" class="btn btn-primary" id="markAllReadBtn">全部标记为已读</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.4/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         // 页面加载完成后初始化
         $(function() {
+            // 存储当前编辑的用户ID
+            let currentEditUserId = null;
+            
             // 新增用户按钮点击事件
             $('#addUserBtn').click(function() {
                 // 重置表单
@@ -493,28 +518,118 @@
                 $('#base-info-tab').click();
                 // 更新弹窗标题
                 $('#userModalTitle').text('新增用户');
+                // 清空当前编辑的用户ID
+                currentEditUserId = null;
                 // 显示弹窗
                 $('#userModal').modal('show');
             });
 
             // 编辑用户按钮点击事件
-            $('.edit-user-btn').click(function() {
+            $(document).on('click', '.edit-user-btn', function() {
                 const userId = $(this).data('id');
-                // 模拟获取用户数据（实际项目中从后端获取）
-                const userData = {
-                    id: userId,
-                    name: '王五',
-                    login_name: 'nurse_wangwu',
-                    gender: '男',
-                    selfid: '330101199001011234',
-                    birthday: '1990-01-01',
-                    phone_num: '13712349012',
-                    address: 'XX市XX区XX街道XX路123号',
-                    contacts: '王六',
-                    con_phone_num: '13812345678',
-                    edu_level: 3,
-                    roles: ['nurse']
+                // 保存当前编辑的用户ID
+                currentEditUserId = userId;
+                
+                // 从表格行中获取用户数据
+                const $row = $(this).closest('tr');
+                const name = $row.find('td:eq(1)').text().trim();
+                const account = $row.find('td:eq(2)').text().trim();
+                const roleText = $row.find('td:eq(3) .role-badge').text().trim();
+                const phone = $row.find('td:eq(4)').text().trim().replace(/\*/g, ''); // 移除掩码
+                
+                // 根据角色文本映射到角色值
+                const roleMap = {
+                    '系统管理员': 'admin',
+                    '服务主管': 'service_supervisor',
+                    '负责人': 'org_manager',
+                    '外勤员': 'assessor',
+                    '评估员': 'assessor',
+                    '排单员': 'scheduler',
+                    '档案管理员': 'archive_manager',
+                    '护理员': 'nurse'
                 };
+                const roleValue = roleMap[roleText] || 'assessor';
+                
+                // 模拟获取用户完整数据（实际项目中从后端获取）
+                // 根据userId返回不同的用户数据
+                let userData = {};
+                if (userId == 1) {
+                    userData = {
+                        id: 1,
+                        name: '张三',
+                        login_name: 'admin_zhangsan',
+                        gender: '男',
+                        selfid: '110101199001011234',
+                        birthday: '1990-01-01',
+                        phone_num: '13812345678',
+                        address: 'XX市XX区XX街道XX路100号',
+                        contacts: '张四',
+                        con_phone_num: '13912345678',
+                        edu_level: 5,
+                        roles: ['admin']
+                    };
+                } else if (userId == 2) {
+                    userData = {
+                        id: 2,
+                        name: '李四',
+                        login_name: 'supervisor_lisi',
+                        gender: '女',
+                        selfid: '220101199002021234',
+                        birthday: '1990-02-02',
+                        phone_num: '13956789012',
+                        address: 'XX市XX区XX街道XX路200号',
+                        contacts: '李三',
+                        con_phone_num: '13856789012',
+                        edu_level: 4,
+                        roles: ['service_supervisor']
+                    };
+                } else if (userId == 3) {
+                    userData = {
+                        id: 3,
+                        name: '王五',
+                        login_name: 'nurse_wangwu',
+                        gender: '男',
+                        selfid: '330101199001011234',
+                        birthday: '1990-01-01',
+                        phone_num: '13712349012',
+                        address: 'XX市XX区XX街道XX路123号',
+                        contacts: '王六',
+                        con_phone_num: '13812345678',
+                        edu_level: 3,
+                        roles: ['nurse']
+                    };
+                } else if (userId == 4) {
+                    userData = {
+                        id: 4,
+                        name: '赵六',
+                        login_name: 'assessor_zhaoliu',
+                        gender: '男',
+                        selfid: '440101199003031234',
+                        birthday: '1990-03-03',
+                        phone_num: '13612345678',
+                        address: 'XX市XX区XX街道XX路300号',
+                        contacts: '赵五',
+                        con_phone_num: '13712345678',
+                        edu_level: 4,
+                        roles: ['assessor']
+                    };
+                } else {
+                    // 默认数据
+                    userData = {
+                        id: userId,
+                        name: name,
+                        login_name: account,
+                        gender: '男',
+                        selfid: '',
+                        birthday: '',
+                        phone_num: phone || '',
+                        address: '',
+                        contacts: '',
+                        con_phone_num: '',
+                        edu_level: '',
+                        roles: [roleValue]
+                    };
+                }
 
                 // 填充基础信息
                 $('#userName').val(userData.name);
@@ -531,11 +646,21 @@
                 $('#userConPhone').val(userData.con_phone_num);
                 $('#userEduLevel').val(userData.edu_level);
 
-                // 选中角色
-                $('input[type="checkbox"]').prop('checked', false);
+                // 选中角色（只操作角色配置标签页中的checkbox）
+                $('#role-config input[type="checkbox"]').prop('checked', false);
                 userData.roles.forEach(role => {
-                    const roleId = 'role' + role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
-                    $(`#${roleId}`).prop('checked', true);
+                    // 直接通过value值查找checkbox
+                    const checkbox = $(`#role-config input[type="checkbox"][value="${role}"]`);
+                    if (checkbox.length) {
+                        checkbox.prop('checked', true);
+                    } else {
+                        // 如果直接匹配失败，尝试通过ID匹配（兼容旧格式）
+                        const roleId = 'role' + role.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join('');
+                        const checkboxById = $(`#${roleId}`);
+                        if (checkboxById.length) {
+                            checkboxById.prop('checked', true);
+                        }
+                    }
                 });
 
                 // 更新弹窗标题
@@ -590,8 +715,8 @@
                 $('#certUploadModal').modal('show');
             });
 
-            // 锁定/解锁用户按钮点击事件
-            $('.lock-user-btn, .unlock-user-btn').click(function() {
+            // 锁定/解锁用户按钮点击事件（使用事件委托）
+            $(document).on('click', '.lock-user-btn, .unlock-user-btn', function() {
                 const userId = $(this).data('id');
                 const status = $(this).data('status');
                 const action = status === 'active' ? '锁定' : '解锁';
@@ -619,7 +744,9 @@
             });
 
             // 保存用户按钮点击事件
-            $('#saveUserBtn').click(function() {
+            $('#saveUserBtn').click(function(e) {
+                e.preventDefault(); // 防止表单提交
+                e.stopPropagation(); // 阻止事件冒泡
                 // 表单校验（实际项目中需要完善校验逻辑）
                 const userName = $('#userName').val().trim();
                 const userAccount = $('#userAccount').val().trim();
@@ -631,8 +758,9 @@
                 const userContacts = $('#userContacts').val().trim();
                 const userConPhone = $('#userConPhone').val().trim();
                 const userEduLevel = $('#userEduLevel').val();
+                // 只获取角色配置标签页中的角色checkbox
                 const roles = [];
-                $('input[type="checkbox"]:checked').each(function() {
+                $('#role-config input[type="checkbox"]:checked').each(function() {
                     roles.push($(this).val());
                 });
 
@@ -694,24 +822,133 @@
                     return;
                 }
 
-                // 模拟保存（实际项目中发送AJAX请求）
-                console.log('保存用户信息:', {
+                // 构造保存数据
+                const saveData = {
                     name: userName,
                     login_name: userAccount,
-                    login_pass: userPassword ? 'MD5加密后的密码' : '不修改',
+                    login_pass: userPassword || null, // 编辑时如果密码为空则不修改
                     gender: userGender,
                     selfid: userSelfId,
+                    birthday: $('#userBirthday').val() || null,
                     phone_num: userPhone,
-                    address: userAddress,
-                    contacts: userContacts,
-                    con_phone_num: userConPhone,
-                    edu_level: userEduLevel,
+                    address: userAddress || null,
+                    contacts: userContacts || null,
+                    con_phone_num: userConPhone || null,
+                    edu_level: userEduLevel || null,
                     roles: roles
-                });
+                };
+                
+                // 如果是编辑模式，添加用户ID
+                if (!isAddMode && currentEditUserId) {
+                    saveData.id = currentEditUserId;
+                }
 
-                // 关闭弹窗并刷新列表（实际项目中需要重新获取用户列表）
-                $('#userModal').modal('hide');
-                alert('用户信息保存成功！');
+                // 模拟保存请求（实际项目中替换为AJAX请求）
+                try {
+                    // 模拟保存成功
+                    console.log('保存用户信息:', saveData);
+                    
+                    // 实际项目中的AJAX请求代码（保留作为参考）
+                    /*
+                    $.ajax({
+                        url: isAddMode ? '/api/admin/user/add' : '/api/admin/user/update',
+                        type: 'POST',
+                        data: JSON.stringify(saveData),
+                        contentType: 'application/json',
+                        success: function(res) {
+                            if (res.code === 200) {
+                                alert('用户信息保存成功！');
+                                $('#userModal').modal('hide');
+                                // 刷新用户列表
+                                location.reload();
+                            } else {
+                                alert('保存失败：' + res.message);
+                            }
+                        },
+                        error: function() {
+                            alert('保存失败，请检查网络连接');
+                        }
+                    });
+                    */
+                    
+                    // 演示环境：模拟保存成功并更新表格
+                    if (isAddMode) {
+                        // 新增用户：添加到表格
+                        const roleMap = {
+                            'admin': '系统管理员',
+                            'service_supervisor': '服务主管',
+                            'org_manager': '负责人',
+                            'assessor': '评估员',
+                            'scheduler': '排单员',
+                            'archive_manager': '档案管理员',
+                            'nurse': '护理员'
+                        };
+                        const roleText = roleMap[saveData.roles[0]] || '评估员';
+                        // 获取当前最大的用户ID
+                        let maxId = 0;
+                        $('.edit-user-btn').each(function() {
+                            const id = parseInt($(this).data('id'));
+                            if (id > maxId) {
+                                maxId = id;
+                            }
+                        });
+                        const newRowId = maxId + 1;
+                        const rowNum = $('tbody tr').length + 1;
+                        const now = new Date();
+                        const createTime = now.getFullYear() + '-' + 
+                            String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(now.getDate()).padStart(2, '0') + ' ' + 
+                            String(now.getHours()).padStart(2, '0') + ':' + 
+                            String(now.getMinutes()).padStart(2, '0') + ':' + 
+                            String(now.getSeconds()).padStart(2, '0');
+                        const phoneMask = saveData.phone_num.length >= 11 ? 
+                            (saveData.phone_num.substring(0, 3) + '****' + saveData.phone_num.substring(7)) : 
+                            saveData.phone_num;
+                        const newRow = `
+                            <tr>
+                                <td>${rowNum}</td>
+                                <td class="text-left">${saveData.name}</td>
+                                <td>${saveData.login_name}</td>
+                                <td><span class="role-badge">${roleText}</span></td>
+                                <td>${phoneMask}</td>
+                                <td>${createTime}</td>
+                                <td><span class="status-active"><i class="fa fa-check-circle"></i> 正常</span></td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-secondary edit-user-btn" data-id="${newRowId}"><i class="fa fa-pencil"></i> 编辑</button>
+                                    <button class="btn btn-sm btn-danger lock-user-btn" data-id="${newRowId}" data-status="active"><i class="fa fa-lock"></i> 锁定</button>
+                                </td>
+                            </tr>
+                        `;
+                        $('tbody').append(newRow);
+                        alert('用户信息保存成功！');
+                    } else {
+                        // 编辑用户：更新表格中对应的行
+                        const $row = $(`.edit-user-btn[data-id="${currentEditUserId}"]`).closest('tr');
+                        if ($row.length) {
+                            $row.find('td:eq(1)').text(saveData.name);
+                            $row.find('td:eq(2)').text(saveData.login_name);
+                            const roleMap = {
+                                'admin': '系统管理员',
+                                'service_supervisor': '服务主管',
+                                'org_manager': '负责人',
+                                'assessor': '评估员',
+                                'scheduler': '排单员',
+                                'archive_manager': '档案管理员',
+                                'nurse': '护理员'
+                            };
+                            const roleText = roleMap[saveData.roles[0]] || '评估员';
+                            $row.find('td:eq(3) .role-badge').text(roleText);
+                            $row.find('td:eq(4)').text(saveData.phone_num.substring(0, 3) + '****' + saveData.phone_num.substring(7));
+                        }
+                        alert('用户信息保存成功！');
+                    }
+                    
+                    // 关闭弹窗
+                    $('#userModal').modal('hide');
+                    
+                } catch (error) {
+                    alert('保存失败：' + error.message);
+                }
             });
 
             // 确认上传按钮点击事件
@@ -739,8 +976,91 @@
                     $('#contractPreview').html('<img src="https://via.placeholder.com/80x120?text=合同1" class="preview-img" alt="服务合同"><img src="https://via.placeholder.com/80x120?text=合同2" class="preview-img" alt="服务合同">');
                 }
             });
+            
+            // ========== 通知功能 ==========
+            // 通知数据
+            let notifications = [
+                { id: 1, title: '角色配置更新', content: '角色权限配置已保存成功。', time: '2025-12-10 14:30:25', read: false, type: 'success' },
+                { id: 2, title: '系统维护通知', content: '系统将于今晚22:00-24:00进行维护，期间可能无法访问。', time: '2025-12-10 10:15:00', read: false, type: 'warning' },
+                { id: 3, title: '权限变更提醒', content: '有2个角色的权限已更新，请及时查看。', time: '2025-12-09 15:20:00', read: false, type: 'info' }
+            ];
+            
+            // 通知按钮点击事件
+            $('.notification').click(function() {
+                renderNotifications();
+                const notificationModal = new bootstrap.Modal('#notificationModal');
+                notificationModal.show();
+            });
+            
+            // 渲染通知列表
+            function renderNotifications() {
+                const notificationList = $('#notificationList');
+                if (notificationList.length === 0) return;
+                
+                notificationList.empty();
+                
+                const unreadCount = notifications.filter(n => !n.read).length;
+                $('.notification-badge').text(unreadCount > 0 ? unreadCount : '');
+                $('.notification-badge').toggle(unreadCount > 0);
+                
+                if (notifications.length === 0) {
+                    notificationList.html('<div class="text-center text-muted py-4">暂无通知</div>');
+                    return;
+                }
+                
+                notifications.forEach(notif => {
+                    const typeClass = {
+                        'success': 'text-success',
+                        'warning': 'text-warning',
+                        'info': 'text-info',
+                        'error': 'text-danger'
+                    }[notif.type] || 'text-info';
+                    
+                    const iconClass = {
+                        'success': 'fa-check-circle',
+                        'warning': 'fa-exclamation-circle',
+                        'info': 'fa-info-circle',
+                        'error': 'fa-times-circle'
+                    }[notif.type] || 'fa-info-circle';
+                    
+                    notificationList.append(`
+                        <div class="notification-item p-3 mb-2 border rounded ${notif.read ? '' : 'bg-light'}" data-id="${notif.id}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <i class="fa ${iconClass} ${typeClass} me-2"></i>
+                                        <strong class="${notif.read ? '' : 'fw-bold'}">${notif.title}</strong>
+                                        ${!notif.read ? '<span class="badge bg-danger ms-2">未读</span>' : ''}
+                                    </div>
+                                    <p class="text-muted mb-1 small">${notif.content}</p>
+                                    <small class="text-muted">${notif.time}</small>
+                                </div>
+                                ${!notif.read ? '<button class="btn btn-sm btn-link mark-read-btn" data-id="' + notif.id + '">标记已读</button>' : ''}
+                            </div>
+                        </div>
+                    `);
+                });
+            }
+            
+            // 标记单个通知为已读
+            $(document).on('click', '.mark-read-btn', function() {
+                const id = parseInt($(this).data('id'));
+                const notif = notifications.find(n => n.id === id);
+                if (notif) {
+                    notif.read = true;
+                    renderNotifications();
+                }
+            });
+            
+            // 全部标记为已读
+            $(document).on('click', '#markAllReadBtn', function() {
+                notifications.forEach(n => n.read = true);
+                renderNotifications();
+            });
+            
+            // 初始化通知显示
+            renderNotifications();
         });
     </script>
 </body>
-
 </html>
